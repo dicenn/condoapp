@@ -22,17 +22,28 @@ add_action('wp_enqueue_scripts', 'condoapptheme_enqueue_styles_scripts');
 
 // Enqueue the JavaScript file
 function condoapp_enqueue_scripts() {
-    // Correctly register the script
+    // Enqueue the existing AJAX script
     wp_register_script('condoapp-ajax', get_template_directory_uri() . '/condoapp-ajax.js', array('jquery'), null, true);
-
-    // Localize the script with new data for AJAX URL and nonce
     wp_localize_script('condoapp-ajax', 'condoapp_ajax', array(
         'ajax_url' => admin_url('admin-ajax.php'),
-        'nonce'    => wp_create_nonce('condoapp_load_more_nonce') // This is where the nonce is generated
+        'nonce'    => wp_create_nonce('condoapp_load_more_nonce')
     ));
-
-    // Enqueue the script
     wp_enqueue_script('condoapp-ajax');
+
+    // Enqueue Ion.RangeSlider CSS
+    wp_enqueue_style('ion-rangeslider', get_template_directory_uri() . '/js/ion.rangeSlider-master/css/ion.rangeSlider.min.css');
+
+    // Enqueue Ion.RangeSlider JS
+    wp_enqueue_script('ion-rangeslider', get_template_directory_uri() . '/js/ion.rangeSlider-master/js/ion.rangeSlider.min.js', array('jquery'), null, true);
+
+    // Enqueue your custom filters script that initializes Ion.RangeSlider
+    wp_enqueue_script('condoapp-filters', get_template_directory_uri() . '/js/condoapp-filters.js', array('jquery', 'ion-rangeslider'), null, true);
+
+    // Get the price range
+    $price_range = get_price_range();
+
+    // Localize the filters script with the price range
+    wp_localize_script('condoapp-filters', 'condoapp_price_range', $price_range);    
 }
 add_action('wp_enqueue_scripts', 'condoapp_enqueue_scripts');
 
@@ -125,4 +136,27 @@ function condoapp_get_unit_card_html($unit) {
     <?php
     $html = ob_get_clean(); // Store the contents of the output buffer and clear it
     return $html;
+}
+
+function get_price_range() {
+    global $wpdb;
+
+    // Query the highest and lowest prices
+    $price_query = $wpdb->get_row("
+        SELECT
+            MIN(CAST(price AS UNSIGNED)) as min_price,
+            MAX(CAST(price AS UNSIGNED)) as max_price
+        FROM pre_con_unit_database_20230827_v4
+    ");
+
+    // Check if the query was successful and we have non-null prices
+    if (is_null($price_query->min_price) || is_null($price_query->max_price)) {
+        return array('min' => 0, 'max' => 0); // Default values if no prices are found
+    }
+
+    // Round the values to the nearest 100K
+    $min_price = floor($price_query->min_price / 100000) * 100000;
+    $max_price = ceil($price_query->max_price / 100000) * 100000;
+
+    return array('min' => $min_price, 'max' => $max_price);
 }

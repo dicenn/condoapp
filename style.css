@@ -20,3 +20,24 @@ Text Domain: condoapptheme
 .card-img {
     /* If you want a border around the image or other styles */
 }
+
+.filter-section {
+    margin-bottom: 20px;
+}
+
+.filter-section label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.filter-section .irs {
+    max-width: 200px; /* Adjust this value as needed */
+    margin: 0 auto; /* This centers the slider in its container */
+}
+
+/* Additional styles for responsiveness */
+@media (max-width: 768px) {
+    .filter-section {
+        margin-bottom: 15px;
+    }
+}

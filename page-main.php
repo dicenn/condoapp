@@ -9,7 +9,12 @@ get_header(); ?>
         <!-- Here will be the filter section -->
         <aside id="secondary" class="widget-area">
             <p>Filter section placeholder</p>
-            <!-- Filters will go here -->
+            <!-- Price Range Filter -->
+            <div class="filter-section">
+                <p class="filter-description">Select the price range for the units you are interested in:</p>
+                <label for="price-range">Price Range:</label>
+                <input type="text" id="price-range" name="price-range" value="" />
+            </div>
         </aside>
 
         <!-- The main content area where unit cards will be displayed -->
