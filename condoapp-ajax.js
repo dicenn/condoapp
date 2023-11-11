@@ -1,6 +1,13 @@
 console.log('condoapp-ajax.js is loaded');
 
 jQuery(document).ready(function($) {
+
+    let currentFilters = {
+        price_range: {
+            min: condoapp_price_range.min,
+            max: condoapp_price_range.max
+        }
+    };
     let offset = 10; // Start with 10 since we already have the first 10 loaded
     let loading = false; // To prevent multiple simultaneous loads
 
@@ -14,7 +21,8 @@ jQuery(document).ready(function($) {
                 url: condoapp_ajax.ajax_url,
                 data: {
                     action: 'load_more_units',
-                    nonce: condoapp_ajax.nonce, // Send the nonce for security verification
+                    nonce: condoapp_ajax.nonce,
+                    filters: currentFilters, // Send current filters
                     offset: offset
                 },
                 beforeSend: function() {

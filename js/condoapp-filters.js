@@ -10,17 +10,20 @@ jQuery(document).ready(function($) {
         prettify_enabled: true,
         prettify_separator: ",",
         onFinish: function(data) {
+            // Update global filter state
+            currentFilters.price_range.min = data.from;
+            currentFilters.price_range.max = data.to;
+            offset = 0; // Reset offset
+
             // AJAX call to filter units by price range
             $.ajax({
                 url: condoapp_ajax.ajax_url, // This should be already localized in your main AJAX script
                 type: 'POST',
                 data: {
-                    action: 'filter_units_by_price', // This is the WordPress hook you'll use
-                    nonce: condoapp_ajax.nonce, // Nonce for security
-                    price_range: {
-                        min: data.from,
-                        max: data.to
-                    }
+                    action: 'filter_units_by_price',
+                    nonce: condoapp_ajax.nonce,
+                    filters: currentFilters,
+                    offset: offset // Send reset offset
                 },
                 success: function(response) {
                     // Handle the response
