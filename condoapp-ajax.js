@@ -21,7 +21,7 @@ jQuery(document).ready(function($) {
                     console.log('Sending AJAX request...');
                 },
                 success: function(response) {
-                    console.log('AJAX request successful:', response);
+                    // console.log('AJAX request successful:', response);
                     $('#unit-cards').append(response);
                     offset += 10; // Prepare offset for next load
                     loading = false;

@@ -9,6 +9,7 @@ get_header(); ?>
         <!-- Here will be the filter section -->
         <aside id="secondary" class="widget-area">
             <p>Filter section placeholder</p>
+
             <!-- Price Range Filter -->
             <div class="filter-section">
                 <p class="filter-description">Select the price range for the units you are interested in:</p>
@@ -20,16 +21,9 @@ get_header(); ?>
         <!-- The main content area where unit cards will be displayed -->
         <section id="unit-cards" class="container mt-5">
             <?php
-                global $wpdb;
-                $limit = 10; // Set the number of units to load initially
-                $units = $wpdb->get_results($wpdb->prepare("
-                    SELECT
-                        *
-                    FROM condo_app.pre_con_unit_database_20230827_v4 u
-                        LEFT JOIN condo_app.pre_con_pdf_jpg_database_20230827 j on j.pdf_link = u.floor_plan_link
-                    LIMIT %d
-                ", $limit));
-                
+                $units = get_filtered_units_sql(array());
+                echo '<script>console.log(' . json_encode(get_filtered_units_sql(array())) . ');</script>';
+
                 foreach ($units as $unit) {
                     echo condoapp_get_unit_card_html($unit);
             ?>

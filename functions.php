@@ -56,15 +56,8 @@ function condoapp_load_more_units() {
     $offset = isset($_POST['offset']) ? intval($_POST['offset']) : 0;
     $limit = 10; // The number of units to load with each request
 
-    // Query to get the next set of units
-    global $wpdb;
-    $units = $wpdb->get_results($wpdb->prepare("
-        SELECT
-            *
-        FROM condo_app.pre_con_unit_database_20230827_v4 u
-            LEFT JOIN condo_app.pre_con_pdf_jpg_database_20230827 j on j.pdf_link = u.floor_plan_link
-        LIMIT %d OFFSET %d
-    ", $limit, $offset));
+    // Use get_filtered_units_sql to get the units
+    $units = get_filtered_units_sql(array(), $offset, $limit);
 
     // Loop through the units and output the HTML for each unit card
     foreach ($units as $unit) {
@@ -159,4 +152,32 @@ function get_price_range() {
     $max_price = ceil($price_query->max_price / 100000) * 100000;
 
     return array('min' => $min_price, 'max' => $max_price);
+}
+
+function get_filtered_units_sql($filters = array(), $offset = 0, $limit = 10) {
+    global $wpdb;
+
+    // Start with the base SQL query
+    $sql = "SELECT * FROM condo_app.pre_con_unit_database_20230827_v4 u
+            LEFT JOIN condo_app.pre_con_pdf_jpg_database_20230827 j ON j.pdf_link = u.floor_plan_link";
+
+    // Initialize an array to hold the WHERE clauses
+    $where_clauses = array();
+
+    // Check for each filter and add the corresponding WHERE clause
+    if (isset($filters['price_min']) && isset($filters['price_max'])) {
+        $where_clauses[] = $wpdb->prepare("u.price BETWEEN %d AND %d", $filters['price_min'], $filters['price_max']);
+    }
+    // Add more filters here...
+
+    // If there are any WHERE clauses, append them to the SQL query
+    if (!empty($where_clauses)) {
+        $sql .= " WHERE " . implode(' AND ', $where_clauses);
+    }
+
+    // Add LIMIT and OFFSET to the SQL query
+    $sql .= $wpdb->prepare(" LIMIT %d OFFSET %d", $limit, $offset);
+
+    // Execute the query and return the results
+    return $wpdb->get_results($sql);
 }
