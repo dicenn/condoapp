@@ -22,6 +22,7 @@ Text Domain: condoapptheme
 }
 
 .filter-section {
+    margin-top: 100px;
     margin-bottom: 20px;
 }
 
@@ -40,4 +41,32 @@ Text Domain: condoapptheme
     .filter-section {
         margin-bottom: 15px;
     }
+}
+
+.sticky-header {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background-color: #fff;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    /* padding-bottom: 10px; */
+}
+
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    /* padding: 10px 20px; */
+}
+
+.header-logo img {
+    height: 75px; /* Adjust as needed */
+}
+
+.header-navigation a {
+    margin-left: 20px;
+    text-decoration: none;
+    color: #333;
+    font-weight: bold;
 }

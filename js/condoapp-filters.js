@@ -1,3 +1,5 @@
+// console.log('condoapp-filters.js is loaded');
+
 jQuery(document).ready(function($) {
     $("#price-range").ionRangeSlider({
         type: "double",
@@ -11,10 +13,11 @@ jQuery(document).ready(function($) {
         prettify_separator: ",",
         onFinish: function(data) {
             // Update global filter state
-            currentFilters.price_range.min = data.from;
-            currentFilters.price_range.max = data.to;
-            offset = 0; // Reset offset
-
+            window.currentFilters.price_range.min = data.from;
+            window.currentFilters.price_range.max = data.to;
+            window.offset = 0; // Reset to 10 if the first 10 units are already loaded
+            // console.log("Sending filters:", window.currentFilters); // Add this line
+            // console.log('Preparing AJAX request with filters:', window.currentFilters);
             // AJAX call to filter units by price range
             $.ajax({
                 url: condoapp_ajax.ajax_url, // This should be already localized in your main AJAX script
@@ -22,18 +25,21 @@ jQuery(document).ready(function($) {
                 data: {
                     action: 'filter_units_by_price',
                     nonce: condoapp_ajax.nonce,
-                    filters: currentFilters,
-                    offset: offset // Send reset offset
+                    filters: window.currentFilters, // Use global currentFilters
+                    offset: window.offset
                 },
                 success: function(response) {
-                    // Handle the response
-                    console.log(response);
-                },
+                    // Replace existing content with the new HTML
+                    $('#unit-cards').html(response);
+                    window.offset = 10; // Set offset to 10 after initial load
+                    // console.log("Response received and content updated.");
+                },                
                 error: function(error) {
                     console.error('Error:', error);
                 }
             });
-            console.log("Selected range: " + data.from + " to " + data.to);
+            // console.log("Selected range: " + data.from + " to " + data.to);
+            // console.log("AJAX request sent for filters:", window.currentFilters);
         }
     });
 });

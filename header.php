@@ -8,20 +8,22 @@
 </head>
 
 <body <?php body_class(); ?>>
-<header id="masthead" class="site-header">
-    <div class="site-branding">
-        <h1 class="site-title"><a href="<?php echo esc_url(home_url('/')); ?>" rel="home"><?php bloginfo('name'); ?></a></h1>
-    </div>
+    <header id="masthead" class="site-header sticky-header">
+        <div class="header-container">
+            <div class="header-logo">
+                <a href="<?php echo esc_url(home_url('/')); ?>">
+                    <img src="<?php echo get_stylesheet_directory_uri(); ?>/assets/CondoApp logo - Nov 7 2023.png" alt="CondoApp Logo">
+                </a>
+            </div>
 
-    <nav id="site-navigation" class="main-navigation">
-        <button class="menu-toggle" aria-controls="primary-menu" aria-expanded="false"><?php esc_html_e('Primary Menu', 'theme-domain'); ?></button>
-        <?php
-            wp_nav_menu(array(
-                'theme_location' => 'menu-1',
-                'menu_id'        => 'primary-menu',
-            ));
-        ?>
-    </nav>
-</header>
+            <div class="header-navigation">
+                <a href="#about-us">About Us</a>
+                <a href="#sign-up">Sign Up</a>
+                <a href="#blog">Blog</a>
+                <a href="#contact">Speak to an Agent</a>
+            </div>
+        </div>
+    </header>
 
-<div id="content" class="site-content">
+    <div id="content" class="site-content">
+        <!-- Page content goes here -->

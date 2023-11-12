@@ -1,6 +1,9 @@
 <?php
 // Your PHP opening tag
 
+// kill the wordpress admin bar at the top of the page in the browser
+add_filter('show_admin_bar', '__return_false');
+
 // Theme setup function
 function condoapptheme_setup() {
     // Add support for various WordPress features here if needed
@@ -46,13 +49,17 @@ add_action('wp_enqueue_scripts', 'condoapp_enqueue_scripts');
 
 // The AJAX handler function to load more unit cards
 function condoapp_load_more_units() {
+
     // Verify the nonce for security
     check_ajax_referer('condoapp_nonce', 'nonce');
 
     // Retrieve offset and filters from AJAX request
     $offset = isset($_POST['offset']) ? intval($_POST['offset']) : 0;
-    $filters = isset($_POST['filters']) ? $_POST['filters'] : array(); // Assuming filters are passed in POST
+    $filters = isset($_POST['filters']['price_range']) ? $_POST['filters']['price_range'] : array();
     $limit = 10;
+
+    // error_log("Offset: " . $offset);
+    // error_log("Received filters: " . json_encode($filters));
 
     // Get units
     $units = get_filtered_units_sql($filters, $offset, $limit);
@@ -63,7 +70,6 @@ function condoapp_load_more_units() {
         $html .= condoapp_get_unit_card_html($unit);
     }
 
-    // Echo HTML and end AJAX request
     echo $html;
     wp_die();
 }
@@ -74,21 +80,34 @@ function condoapp_filter_units_by_price() {
     // Verify the nonce for security
     check_ajax_referer('condoapp_nonce', 'nonce');
 
-    // Retrieve filters from AJAX request
-    $filters = isset($_POST['price_range']) ? $_POST['price_range'] : array();
-    $limit = 10;
+    // Debug: Check if the function is firing
+    // echo 'Function condoapp_filter_units_by_price is firing.<br>';
 
-    // Always start from the first set of units when filtering
-    $offset = 0;
+    // Retrieve filters from AJAX request
+    $filters = isset($_POST['filters']['price_range']) ? $_POST['filters']['price_range'] : array();
+
+    // Debug: Output the received filters
+    // echo 'Received filters: ' . json_encode($filters) . '<br>';
+    // error_log('Received filters: ' . print_r($_POST['filters'], true));
+
+    $limit = 10;
+    $offset = 0; // Always start from the first set of units when filtering
 
     // Get units
     $units = get_filtered_units_sql($filters, $offset, $limit);
+
+    // Debug: Output the number of units retrieved
+    // echo 'Number of units retrieved: ' . count($units) . '<br>';
+    // error_log('Number of units retrieved: ' . count($units));
 
     // Generate HTML for unit cards
     $html = '';
     foreach ($units as $unit) {
         $html .= condoapp_get_unit_card_html($unit);
     }
+
+    // Debug: Output the generated HTML
+    // echo 'Generated HTML: ' . htmlspecialchars($html) . '<br>';
 
     // Echo HTML and end AJAX request
     echo $html;
@@ -194,8 +213,8 @@ function get_filtered_units_sql($filters = array(), $offset = 0, $limit = 10) {
 
     // WHERE clauses
     $where_clauses = array();
-    if (isset($filters['price_min']) && isset($filters['price_max'])) {
-        $where_clauses[] = $wpdb->prepare("u.price BETWEEN %d AND %d", $filters['price_min'], $filters['price_max']);
+    if (isset($filters['min']) && isset($filters['max'])) {
+        $where_clauses[] = $wpdb->prepare("u.price BETWEEN %d AND %d", $filters['min'], $filters['max']);
     }
     // Add more filters here...
 
