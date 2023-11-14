@@ -5,15 +5,20 @@ window.currentFilters = {
     price_range: {
         min: 0, // Default values, will be updated when condoapp-filters.js runs
         max: 0
-    }
+    },
+    // Initialize other filters here as needed
 };
 
 window.offset = 10; // Initialize with 10 as the first set of units is already loaded
 
 jQuery(document).ready(function($) {
-    // Update currentFilters with actual values from condoapp_price_range
-    window.currentFilters.price_range.min = condoapp_price_range.min;
-    window.currentFilters.price_range.max = condoapp_price_range.max;
+    // Update currentFilters with actual values from condoapp_filter_data
+    if (condoapp_filter_data && condoapp_filter_data.price_range) {
+        window.currentFilters.price_range.min = condoapp_filter_data.price_range.min_value;
+        window.currentFilters.price_range.max = condoapp_filter_data.price_range.max_value;
+    }
+
+    // Initialize other filters here as needed
 
     let loading = false; // To prevent multiple simultaneous loads
 

@@ -37,12 +37,12 @@ function condoapp_enqueue_scripts() {
     wp_enqueue_style('ion-rangeslider', get_template_directory_uri() . '/js/ion.rangeSlider-master/css/ion.rangeSlider.min.css');
     wp_enqueue_script('ion-rangeslider', get_template_directory_uri() . '/js/ion.rangeSlider-master/js/ion.rangeSlider.min.js', array('jquery'), null, true);
 
-    // Get the price range
-    $price_range = get_price_range();
+    // Get all filter ranges
+    $filter_ranges = get_filter_ranges();
 
     // Enqueue your custom filters script that initializes Ion.RangeSlider
     wp_register_script('condoapp-filters', get_template_directory_uri() . '/js/condoapp-filters.js', array('jquery', 'ion-rangeslider', 'condoapp-ajax'), null, true);
-    wp_localize_script('condoapp-filters', 'condoapp_price_range', $price_range);
+    wp_localize_script('condoapp-filters', 'condoapp_filter_data', $filter_ranges);
     wp_enqueue_script('condoapp-filters');
 }
 add_action('wp_enqueue_scripts', 'condoapp_enqueue_scripts');
@@ -119,8 +119,9 @@ add_action('wp_ajax_filter_units_by_price', 'condoapp_filter_units_by_price');
 // generates the html unit card
 function condoapp_get_unit_card_html($unit) {
     // Default image if floor_plan_link is empty
-    $default_image = get_template_directory_uri() . '/images/default-floorplan.jpg';
-    $image = !empty($unit->jpg_link) ? esc_url($unit->jpg_link) : $default_image;
+    // $default_image = get_template_directory_uri() . '/images/default-floorplan.jpg';
+    // $image = !empty($unit->jpg_link) ? esc_url($unit->jpg_link) : $default_image;
+    $image = esc_url($unit->jpg_link);
 
     // Placeholder data for investment summary
     $investment_data = [
@@ -208,8 +209,11 @@ function get_filtered_units_sql($filters = array(), $offset = 0, $limit = 10) {
     global $wpdb;
 
     // Base SQL query
-    $sql = "SELECT * FROM condo_app.pre_con_unit_database_20230827_v4 u
-            LEFT JOIN condo_app.pre_con_pdf_jpg_database_20230827 j ON j.pdf_link = u.floor_plan_link";
+    $sql = "select
+                *
+            from condo_app.pre_con_unit_database_20230827_v4 u
+	            left join condo_app.pre_con_pdf_jpg_database_20230827 j on j.pdf_link = u.floor_plan_link
+	            left join condo_app.deposit_structure d on d.project = u.project and deposit_occupancy = 'TRUE'";
 
     // WHERE clauses
     $where_clauses = array();
@@ -228,4 +232,72 @@ function get_filtered_units_sql($filters = array(), $offset = 0, $limit = 10) {
 
     // Execute and return the query results
     return $wpdb->get_results($sql);
+}
+
+// gets the values for dropdown filters
+function get_distinct_values($column) {
+    global $wpdb;
+    $query = $wpdb->get_col("
+        SELECT DISTINCT $column 
+        FROM condo_app.pre_con_unit_database_20230827_v4 u
+        WHERE $column IS NOT NULL
+    ");
+    return $query ?: []; // Return an empty array if the query fails
+}
+
+// gets the values for slider filters
+function get_min_max_values($column) {
+    global $wpdb;
+    $query = $wpdb->get_row("
+        SELECT MIN($column) as min_value, MAX($column) as max_value 
+        FROM pre_con_unit_database_20230827_v4 u
+            LEFT JOIN condo_app.pre_con_pdf_jpg_database_20230827 j ON j.pdf_link = u.floor_plan_link
+            LEFT JOIN condo_app.deposit_structure d ON d.project = u.project AND deposit_occupancy = 'TRUE'
+    ");
+    return $query ?: ['min_value' => null, 'max_value' => null];
+}
+
+// gets the values for the occupancy date slider filter specifically
+function get_pre_occupancy_deposits() {
+    global $wpdb;
+    $query = "
+        SELECT
+            project,
+            ROUND(SUM(deposit_percent), 2) as pre_occupancy_deposit
+        FROM condo_app.deposit_structure
+        WHERE deposit_occupancy = ''
+        GROUP BY project
+    ";
+    $results = $wpdb->get_results($query, ARRAY_A);
+    return $results ?: []; // Return an empty array if the query fails or returns no results
+}
+
+// calls the filter functions (get_distinct_values, get_min_max_values, get_pre_occupancy_deposits) and gets their values for use in the filters themselves
+function get_filter_ranges() {
+    // Get ranges for slider filters
+    $price_range = get_min_max_values('price');
+    $square_footage_range = get_min_max_values('interior_size');
+    $occupancy_date_range = get_min_max_values('deposit_date');
+
+    // Get distinct values for dropdown filters
+    $bedrooms = get_distinct_values('bedrooms');
+    $bathrooms = get_distinct_values('bathrooms');
+    $unit_type = get_distinct_values('unit_type');
+    $pre_occupancy_deposit = get_pre_occupancy_deposits();
+    $developer = get_distinct_values('developer');
+    $project = get_distinct_values('project');
+    $den = get_distinct_values('den');
+
+    return [
+        'price_range' => $price_range,
+        'square_footage_range' => $square_footage_range,
+        'occupancy_date_range' => $occupancy_date_range,
+        'bedrooms' => $bedrooms,
+        'bathrooms' => $bathrooms,
+        'unit_type' => $unit_type,
+        'pre_occupancy_deposit' => $pre_occupancy_deposit,
+        'developer' => $developer,
+        'project' => $project,
+        'den' => $den
+    ];
 }
