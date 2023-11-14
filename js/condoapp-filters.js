@@ -1,5 +1,4 @@
 // console.log('condoapp-filters.js is loaded');
-
 jQuery(document).ready(function($) {
     // Check if condoapp_filter_data is defined and has price_range data
     if (condoapp_filter_data && condoapp_filter_data.price_range) {
@@ -24,7 +23,7 @@ jQuery(document).ready(function($) {
                     url: condoapp_ajax.ajax_url,
                     type: 'POST',
                     data: {
-                        action: 'filter_units_by_price',
+                        action: 'filter_units',
                         nonce: condoapp_ajax.nonce,
                         filters: window.currentFilters,
                         offset: window.offset
@@ -42,4 +41,44 @@ jQuery(document).ready(function($) {
     } else {
         console.error('condoapp_filter_data or price_range data is not available.');
     }
+
+    if (condoapp_filter_data && condoapp_filter_data.square_footage_range) {
+        $("#square-footage-range").ionRangeSlider({
+            type: "double",
+            grid: true,
+            min: Math.floor(condoapp_filter_data.square_footage_range.min_value / 100) * 100,
+            max: Math.ceil(condoapp_filter_data.square_footage_range.max_value / 100) * 100,
+            from: Math.floor(condoapp_filter_data.square_footage_range.min_value / 100) * 100,
+            to: Math.ceil(condoapp_filter_data.square_footage_range.max_value / 100) * 100,
+            step: 50,
+            prettify_enabled: true,
+            prettify_separator: ",",
+            onFinish: function(data) {
+                // Update global filter state for square footage
+                window.currentFilters.square_footage_range.min = data.from;
+                window.currentFilters.square_footage_range.max = data.to;
+                window.offset = 0; // Reset offset for new filtered data
+
+                $.ajax({
+                    url: condoapp_ajax.ajax_url,
+                    type: 'POST',
+                    data: {
+                        action: 'filter_units',
+                        nonce: condoapp_ajax.nonce,
+                        filters: window.currentFilters,
+                        offset: window.offset
+                    },
+                    success: function(response) {
+                        $('#unit-cards').html(response);
+                        window.offset = 10; // Set offset for next load
+                    },
+                    error: function(error) {
+                        console.error('Error:', error);
+                    }
+                });
+            }
+        });
+    }
+
+
 });

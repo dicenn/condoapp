@@ -15,6 +15,7 @@ get_header(); ?>
                 <!-- <p class="filter-description">Select the price range for the units you are interested in:</p> -->
                 <!-- <label for="price-range">Price Range:</label> -->
                 <input type="text" id="price-range" name="price-range" value="" />
+                <input type="text" id="square-footage-range" name="square-footage-range" value="" />
             </div>
         </aside>
 

@@ -6,19 +6,82 @@ window.currentFilters = {
         min: 0, // Default values, will be updated when condoapp-filters.js runs
         max: 0
     },
-    // Initialize other filters here as needed
+    // Initialize other filters with default values
+    bedrooms: [],
+    bathrooms: [],
+    unit_type: [],
+    pre_occupancy_deposit: [],
+    developer: [],
+    project: [],
+    den: [],
+    square_footage_range: {
+        min: 0,
+        max: 0
+    },
+    occupancy_date_range: {
+        min: '', // Use appropriate default value
+        max: ''  // Use appropriate default value
+    }
 };
 
 window.offset = 10; // Initialize with 10 as the first set of units is already loaded
 
 jQuery(document).ready(function($) {
     // Update currentFilters with actual values from condoapp_filter_data
-    if (condoapp_filter_data && condoapp_filter_data.price_range) {
-        window.currentFilters.price_range.min = condoapp_filter_data.price_range.min_value;
-        window.currentFilters.price_range.max = condoapp_filter_data.price_range.max_value;
-    }
-
-    // Initialize other filters here as needed
+    if (condoapp_filter_data) {
+        // Price Range
+        if (condoapp_filter_data.price_range) {
+            window.currentFilters.price_range.min = condoapp_filter_data.price_range.min_value;
+            window.currentFilters.price_range.max = condoapp_filter_data.price_range.max_value;
+        }
+    
+        // Square Footage Range
+        if (condoapp_filter_data.square_footage_range) {
+            window.currentFilters.square_footage_range.min = condoapp_filter_data.square_footage_range.min_value;
+            window.currentFilters.square_footage_range.max = condoapp_filter_data.square_footage_range.max_value;
+        }
+    
+        // Occupancy Date Range
+        if (condoapp_filter_data.occupancy_date_range) {
+            window.currentFilters.occupancy_date_range.min = condoapp_filter_data.occupancy_date_range.min_value;
+            window.currentFilters.occupancy_date_range.max = condoapp_filter_data.occupancy_date_range.max_value;
+        }
+    
+        // Bedrooms
+        if (condoapp_filter_data.bedrooms) {
+            window.currentFilters.bedrooms = condoapp_filter_data.bedrooms;
+        }
+    
+        // Bathrooms
+        if (condoapp_filter_data.bathrooms) {
+            window.currentFilters.bathrooms = condoapp_filter_data.bathrooms;
+        }
+    
+        // Unit Type
+        if (condoapp_filter_data.unit_type) {
+            window.currentFilters.unit_type = condoapp_filter_data.unit_type;
+        }
+    
+        // Pre-Occupancy Deposit
+        if (condoapp_filter_data.pre_occupancy_deposit) {
+            window.currentFilters.pre_occupancy_deposit = condoapp_filter_data.pre_occupancy_deposit;
+        }
+    
+        // Developer
+        if (condoapp_filter_data.developer) {
+            window.currentFilters.developer = condoapp_filter_data.developer;
+        }
+    
+        // Project
+        if (condoapp_filter_data.project) {
+            window.currentFilters.project = condoapp_filter_data.project;
+        }
+    
+        // Den
+        if (condoapp_filter_data.den) {
+            window.currentFilters.den = condoapp_filter_data.den;
+        }
+    }    
 
     let loading = false; // To prevent multiple simultaneous loads
 

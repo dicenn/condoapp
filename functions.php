@@ -76,48 +76,48 @@ function condoapp_load_more_units() {
 add_action('wp_ajax_nopriv_load_more_units', 'condoapp_load_more_units');
 add_action('wp_ajax_load_more_units', 'condoapp_load_more_units');
 
-function condoapp_filter_units_by_price() {
-    // Verify the nonce for security
-    check_ajax_referer('condoapp_nonce', 'nonce');
+// function condoapp_filter_units_by_price() {
+//     // Verify the nonce for security
+//     check_ajax_referer('condoapp_nonce', 'nonce');
 
-    // Debug: Check if the function is firing
-    // echo 'Function condoapp_filter_units_by_price is firing.<br>';
+//     // Debug: Check if the function is firing
+//     // echo 'Function condoapp_filter_units_by_price is firing.<br>';
 
-    // Retrieve filters from AJAX request
-    $filters = isset($_POST['filters']['price_range']) ? $_POST['filters']['price_range'] : array();
+//     // Retrieve filters from AJAX request
+//     $filters = isset($_POST['filters']['price_range']) ? $_POST['filters']['price_range'] : array();
 
-    // Debug: Output the received filters
-    // echo 'Received filters: ' . json_encode($filters) . '<br>';
-    // error_log('Received filters: ' . print_r($_POST['filters'], true));
+//     // Debug: Output the received filters
+//     // echo 'Received filters: ' . json_encode($filters) . '<br>';
+//     // error_log('Received filters: ' . print_r($_POST['filters'], true));
 
-    $limit = 10;
-    $offset = 0; // Always start from the first set of units when filtering
+//     $limit = 10;
+//     $offset = 0; // Always start from the first set of units when filtering
 
-    // Get units
-    $units = get_filtered_units_sql($filters, $offset, $limit);
+//     // Get units
+//     $units = get_filtered_units_sql($filters, $offset, $limit);
 
-    // Debug: Output the number of units retrieved
-    // echo 'Number of units retrieved: ' . count($units) . '<br>';
-    // error_log('Number of units retrieved: ' . count($units));
+//     // Debug: Output the number of units retrieved
+//     // echo 'Number of units retrieved: ' . count($units) . '<br>';
+//     // error_log('Number of units retrieved: ' . count($units));
 
-    // Generate HTML for unit cards
-    $html = '';
-    foreach ($units as $unit) {
-        $html .= condoapp_get_unit_card_html($unit);
-    }
+//     // Generate HTML for unit cards
+//     $html = '';
+//     foreach ($units as $unit) {
+//         $html .= condoapp_get_unit_card_html($unit);
+//     }
 
-    // Debug: Output the generated HTML
-    // echo 'Generated HTML: ' . htmlspecialchars($html) . '<br>';
+//     // Debug: Output the generated HTML
+//     // echo 'Generated HTML: ' . htmlspecialchars($html) . '<br>';
 
-    // Echo HTML and end AJAX request
-    echo $html;
-    wp_die();
-}
-add_action('wp_ajax_nopriv_filter_units_by_price', 'condoapp_filter_units_by_price');
-add_action('wp_ajax_filter_units_by_price', 'condoapp_filter_units_by_price');
+//     // Echo HTML and end AJAX request
+//     echo $html;
+//     wp_die();
+// }
+// add_action('wp_ajax_nopriv_filter_units_by_price', 'condoapp_filter_units_by_price');
+// add_action('wp_ajax_filter_units_by_price', 'condoapp_filter_units_by_price');
 
 // generates the html unit card
-function condoapp_get_unit_card_html($unit) {
+function condoapp_get_unit_card_html_robust($unit) {
     // Default image if floor_plan_link is empty
     // $default_image = get_template_directory_uri() . '/images/default-floorplan.jpg';
     // $image = !empty($unit->jpg_link) ? esc_url($unit->jpg_link) : $default_image;
@@ -181,46 +181,71 @@ function condoapp_get_unit_card_html($unit) {
 }
 
 // obtains the min and max price from database and uses this to inform what price range to make the slider
-function get_price_range() {
-    global $wpdb;
+// function get_price_range() {
+//     global $wpdb;
 
-    // Query the highest and lowest prices
-    $price_query = $wpdb->get_row("
-        SELECT
-            MIN(CAST(price AS UNSIGNED)) as min_price,
-            MAX(CAST(price AS UNSIGNED)) as max_price
-        FROM pre_con_unit_database_20230827_v4
-    ");
+//     // Query the highest and lowest prices
+//     $price_query = $wpdb->get_row("
+//         SELECT
+//             MIN(CAST(price AS UNSIGNED)) as min_price,
+//             MAX(CAST(price AS UNSIGNED)) as max_price
+//         FROM pre_con_unit_database_20230827_v4
+//     ");
 
-    // Check if the query was successful and we have non-null prices
-    if (is_null($price_query->min_price) || is_null($price_query->max_price)) {
-        return array('min' => 0, 'max' => 0); // Default values if no prices are found
-    }
+//     // Check if the query was successful and we have non-null prices
+//     if (is_null($price_query->min_price) || is_null($price_query->max_price)) {
+//         return array('min' => 0, 'max' => 0); // Default values if no prices are found
+//     }
 
-    // Round the values to the nearest 100K
-    $min_price = floor($price_query->min_price / 100000) * 100000;
-    $max_price = ceil($price_query->max_price / 100000) * 100000;
+//     // Round the values to the nearest 100K
+//     $min_price = floor($price_query->min_price / 100000) * 100000;
+//     $max_price = ceil($price_query->max_price / 100000) * 100000;
 
-    return array('min' => $min_price, 'max' => $max_price);
-}
+//     return array('min' => $min_price, 'max' => $max_price);
+// }
 
 // gets units from the database both initially on page load and based on filters set by user
 function get_filtered_units_sql($filters = array(), $offset = 0, $limit = 10) {
     global $wpdb;
 
     // Base SQL query
-    $sql = "select
-                *
-            from condo_app.pre_con_unit_database_20230827_v4 u
-	            left join condo_app.pre_con_pdf_jpg_database_20230827 j on j.pdf_link = u.floor_plan_link
-	            left join condo_app.deposit_structure d on d.project = u.project and deposit_occupancy = 'TRUE'";
+    $sql = "SELECT *
+            FROM condo_app.pre_con_unit_database_20230827_v4 u
+            LEFT JOIN condo_app.pre_con_pdf_jpg_database_20230827 j ON j.pdf_link = u.floor_plan_link
+            LEFT JOIN condo_app.deposit_structure d ON d.project = u.project AND deposit_occupancy = 'TRUE'";
 
     // WHERE clauses
     $where_clauses = array();
-    if (isset($filters['min']) && isset($filters['max'])) {
-        $where_clauses[] = $wpdb->prepare("u.price BETWEEN %d AND %d", $filters['min'], $filters['max']);
+
+    // Price range filter
+    if (isset($filters['price_range']['min']) && isset($filters['price_range']['max'])) {
+        $where_clauses[] = $wpdb->prepare("u.price BETWEEN %d AND %d", $filters['price_range']['min'], $filters['price_range']['max']);
     }
-    // Add more filters here...
+
+    // Square footage range filter
+    if (isset($filters['square_footage_range']['min']) && isset($filters['square_footage_range']['max'])) {
+        $where_clauses[] = $wpdb->prepare("u.interior_size BETWEEN %d AND %d", $filters['square_footage_range']['min'], $filters['square_footage_range']['max']);
+    }
+
+    // Occupancy date range filter
+    if (isset($filters['occupancy_date_range']['min']) && isset($filters['occupancy_date_range']['max'])) {
+        $where_clauses[] = $wpdb->prepare("u.occupancy_date BETWEEN %s AND %s", $filters['occupancy_date_range']['min'], $filters['occupancy_date_range']['max']);
+    }
+
+    // Dropdown filters
+    $dropdown_filters = ['bedrooms', 'bathrooms', 'unit_type', 'developer', 'project', 'den'];
+    foreach ($dropdown_filters as $filter) {
+        if (!empty($filters[$filter])) {
+            $where_clauses[] = "u.$filter IN ('" . implode("', '", array_map('esc_sql', $filters[$filter])) . "')";
+        }
+    }
+
+    // Pre-occupancy deposit filter
+    // Assuming this filter requires a special handling
+    if (!empty($filters['pre_occupancy_deposit'])) {
+        // Add your specific condition for pre_occupancy_deposit here
+        // Example: $where_clauses[] = "d.pre_occupancy_deposit IN ('" . implode("', '", array_map('esc_sql', $filters['pre_occupancy_deposit'])) . "')";
+    }
 
     // Append WHERE clauses if any
     if (!empty($where_clauses)) {
@@ -300,4 +325,68 @@ function get_filter_ranges() {
         'project' => $project,
         'den' => $den
     ];
+}
+
+function condoapp_filter_units() {
+    // Verify the nonce for security
+    check_ajax_referer('condoapp_nonce', 'nonce');
+
+    // Retrieve filters from AJAX request
+    $filters = isset($_POST['filters']) ? $_POST['filters'] : array();
+
+    // Set default values for filters if not provided
+    $default_filters = array(
+        'price_range' => array('min' => 0, 'max' => PHP_INT_MAX),
+        'square_footage_range' => array('min' => 0, 'max' => PHP_INT_MAX),
+        // Add default values for other filters
+        'occupancy_date_range' => array('min' => '1900-01-01', 'max' => '2100-01-01'),
+        'bedrooms' => array(),
+        'bathrooms' => array(),
+        'unit_type' => array(),
+        'pre_occupancy_deposit' => array(),
+        'developer' => array(),
+        'project' => array(),
+        'den' => array(),
+        // ... Add more filters as needed
+    );
+
+    // Merge received filters with default values
+    $filters = array_merge($default_filters, $filters);
+
+    $limit = 10;
+    $offset = isset($_POST['offset']) ? intval($_POST['offset']) : 0;
+
+    // Get units based on filters
+    $units = get_filtered_units_sql($filters, $offset, $limit);
+
+    // Generate HTML for unit cards
+    $html = '';
+    foreach ($units as $unit) {
+        $html .= condoapp_get_unit_card_html($unit);
+    }
+
+    // Echo HTML and end AJAX request
+    echo $html;
+    wp_die();
+}
+add_action('wp_ajax_nopriv_filter_units', 'condoapp_filter_units');
+add_action('wp_ajax_filter_units', 'condoapp_filter_units');
+
+// temporary get unit card function for testing purposes
+function condoapp_get_unit_card_html($unit) {
+    // Simplified output for testing
+    $output = '<div style="border: 1px solid #ddd; margin-bottom: 10px;">'; // Container with border and margin
+    $output .= esc_html($unit->project) . ' | ' .
+               'Model ' . esc_html($unit->model) . ' | ' .
+               'Unit #' . esc_html($unit->unit_number) . ' | ' .
+               'Price: $' . esc_html(number_format($unit->price)) . ' | ' .
+               'Beds: ' . esc_html($unit->bedrooms) . ' | ' .
+               'Baths: ' . esc_html($unit->bathrooms) . ' | ' .
+               'Sqft: ' . esc_html($unit->interior_size) . ' | ' .
+               'Occupancy: ' . esc_html($unit->occupancy_date) . ' | ' .
+               'Developer: ' . esc_html($unit->developer) . ' | ' .
+               'Deposit Date: ' . (isset($unit->deposit_date) ? esc_html($unit->deposit_date) : 'N/A');
+    $output .= '</div>'; // Close container
+
+    return $output;
 }
