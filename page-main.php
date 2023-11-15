@@ -19,18 +19,27 @@ get_header(); ?>
             </div>
         </aside>
 
+        <div class="dropdown">
+            <button class="dropbtn">Bedrooms</button>
+            <div class="dropdown-content">
+                <form id="bedrooms-filter">
+                    <label><input type="checkbox" name="bedrooms" value="1"> 1 Bedroom</label>
+                    <label><input type="checkbox" name="bedrooms" value="2"> 2 Bedrooms</label>
+                    <label><input type="checkbox" name="bedrooms" value="3"> 3 Bedrooms</label>
+                    <!-- Add more options as needed -->
+                </form>
+            </div>
+        </div>
+
         <!-- The main content area where unit cards will be displayed -->
         <section id="unit-cards" class="container mt-5">
             <?php
-                $units = get_filtered_units_sql(array());
-                echo '<script>console.log(' . json_encode(get_filtered_units_sql(array())) . ');</script>';
+            $query_data = get_filtered_units_sql(array());
+            echo '<pre>SQL Query: ' . htmlspecialchars($query_data['sql']) . '</pre>';
 
-                foreach ($units as $unit) {
-                    echo condoapp_get_unit_card_html($unit);
-            ?>
-
-            <?php
-                }
+            foreach ($query_data['results'] as $unit) {
+                echo condoapp_get_unit_card_html($unit);
+            }
             ?>
         </section>
     </main><!-- #main -->

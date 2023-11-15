@@ -80,5 +80,32 @@ jQuery(document).ready(function($) {
         });
     }
 
+    $('#bedrooms-filter input[type="checkbox"]').change(function() {
+        // Update the bedrooms filter in currentFilters
+        window.currentFilters.bedrooms = $('#bedrooms-filter input[type="checkbox"]:checked').map(function() {
+            return this.value;
+        }).get();
 
+        window.offset = 0; // Reset offset for new filtered data
+
+        // AJAX call to filter units by updated filters
+        $.ajax({
+            url: condoapp_ajax.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'filter_units',
+                nonce: condoapp_ajax.nonce,
+                filters: window.currentFilters,
+                offset: window.offset
+            },
+            success: function(response) {
+                $('#unit-cards').html(response);
+                window.offset = 10; // Set offset for next load
+            },
+            error: function(error) {
+                console.error('Error:', error);
+            }
+        });
+    });
+    
 });

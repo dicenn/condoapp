@@ -107,17 +107,24 @@ jQuery(document).ready(function($) {
                     // console.log('Sending AJAX request...');
                 },
                 success: function(response) {
-                    // console.log('Response:', response); // Log the entire response for debugging
-                
+                    // Extract SQL debug comment
+                    let debugSql = response.match(/<!-- SQL Debug: (.*) -->/);
+                    if (debugSql && debugSql[1]) {
+                        console.log("SQL Query:", debugSql[1]);
+                    } else {
+                        console.log("SQL Query not found in response");
+                    }
+                    
+                    // Process the rest of the response
                     if (response.trim() !== '') {
-                        $('#unit-cards').append(response);
+                        $('#unit-cards').append(response.replace(/<!--.*?-->/g, '')); // Remove debug comments from HTML
                         window.offset += 10; // Increment offset for next load
                     } else {
                         console.log("No more units to load.");
                     }
                     loading = false;
                     console.log("New offset:", window.offset);
-                },
+                },                
                 error: function(jqXHR, textStatus, errorThrown) {
                     console.log('AJAX request failed:', textStatus, errorThrown);
                     loading = false;

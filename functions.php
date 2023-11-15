@@ -49,20 +49,18 @@ add_action('wp_enqueue_scripts', 'condoapp_enqueue_scripts');
 
 // The AJAX handler function to load more unit cards
 function condoapp_load_more_units() {
-
     // Verify the nonce for security
     check_ajax_referer('condoapp_nonce', 'nonce');
 
     // Retrieve offset and filters from AJAX request
     $offset = isset($_POST['offset']) ? intval($_POST['offset']) : 0;
-    $filters = isset($_POST['filters']['price_range']) ? $_POST['filters']['price_range'] : array();
+    $filters = isset($_POST['filters']) ? $_POST['filters'] : array(); // Capture all filters
     $limit = 10;
 
-    // error_log("Offset: " . $offset);
-    // error_log("Received filters: " . json_encode($filters));
-
-    // Get units
-    $units = get_filtered_units_sql($filters, $offset, $limit);
+    // Get units and SQL query for debugging
+    $query_data = get_filtered_units_sql($filters, $offset, $limit);
+    $units = $query_data['results'];
+    $debug_sql = $query_data['sql'];
 
     // Generate HTML for unit cards
     $html = '';
@@ -70,7 +68,9 @@ function condoapp_load_more_units() {
         $html .= condoapp_get_unit_card_html($unit);
     }
 
-    echo $html;
+    // Echo HTML and SQL query for debugging (remove SQL echo in production)
+    echo $html . "<!-- SQL Debug: " . htmlspecialchars($debug_sql) . " -->";
+    echo "SQL Debug: " . htmlspecialchars($debug_sql);
     wp_die();
 }
 add_action('wp_ajax_nopriv_load_more_units', 'condoapp_load_more_units');
@@ -212,7 +212,7 @@ function get_filtered_units_sql($filters = array(), $offset = 0, $limit = 10) {
     $sql = "SELECT *
             FROM condo_app.pre_con_unit_database_20230827_v4 u
             LEFT JOIN condo_app.pre_con_pdf_jpg_database_20230827 j ON j.pdf_link = u.floor_plan_link
-            LEFT JOIN condo_app.deposit_structure d ON d.project = u.project AND deposit_occupancy = 'TRUE'";
+            LEFT JOIN (select project as project_dd, deposit_date from condo_app.deposit_structure where deposit_occupancy = 'TRUE') d ON d.project_dd = u.project";
 
     // WHERE clauses
     $where_clauses = array();
@@ -228,9 +228,9 @@ function get_filtered_units_sql($filters = array(), $offset = 0, $limit = 10) {
     }
 
     // Occupancy date range filter
-    if (isset($filters['occupancy_date_range']['min']) && isset($filters['occupancy_date_range']['max'])) {
-        $where_clauses[] = $wpdb->prepare("u.occupancy_date BETWEEN %s AND %s", $filters['occupancy_date_range']['min'], $filters['occupancy_date_range']['max']);
-    }
+    // if (isset($filters['occupancy_date_range']['min']) && isset($filters['occupancy_date_range']['max'])) {
+    //     $where_clauses[] = $wpdb->prepare("u.occupancy_date BETWEEN %s AND %s", $filters['occupancy_date_range']['min'], $filters['occupancy_date_range']['max']);
+    // }
 
     // Dropdown filters
     $dropdown_filters = ['bedrooms', 'bathrooms', 'unit_type', 'developer', 'project', 'den'];
@@ -255,8 +255,11 @@ function get_filtered_units_sql($filters = array(), $offset = 0, $limit = 10) {
     // Add LIMIT and OFFSET
     $sql .= $wpdb->prepare(" LIMIT %d OFFSET %d", $limit, $offset);
 
-    // Execute and return the query results
-    return $wpdb->get_results($sql);
+    // Execute the query
+    $results = $wpdb->get_results($sql);
+
+    // Return both the SQL query and the results
+    return array('results' => $results, 'sql' => $sql);
 }
 
 // gets the values for dropdown filters
@@ -357,11 +360,11 @@ function condoapp_filter_units() {
     $offset = isset($_POST['offset']) ? intval($_POST['offset']) : 0;
 
     // Get units based on filters
-    $units = get_filtered_units_sql($filters, $offset, $limit);
+    $query_data = get_filtered_units_sql($filters, $offset, $limit);
 
     // Generate HTML for unit cards
     $html = '';
-    foreach ($units as $unit) {
+    foreach ($query_data['results'] as $unit) {
         $html .= condoapp_get_unit_card_html($unit);
     }
 
@@ -385,7 +388,7 @@ function condoapp_get_unit_card_html($unit) {
                'Sqft: ' . esc_html($unit->interior_size) . ' | ' .
                'Occupancy: ' . esc_html($unit->occupancy_date) . ' | ' .
                'Developer: ' . esc_html($unit->developer) . ' | ' .
-               'Deposit Date: ' . (isset($unit->deposit_date) ? esc_html($unit->deposit_date) : 'N/A');
+            //    'Deposit Date: ' . (isset($unit->deposit_date) ? esc_html($unit->deposit_date) : 'N/A');
     $output .= '</div>'; // Close container
 
     return $output;
