@@ -1,5 +1,4 @@
 <?php
-// Your PHP opening tag
 
 // kill the wordpress admin bar at the top of the page in the browser
 add_filter('show_admin_bar', '__return_false');
@@ -15,6 +14,9 @@ function condoapptheme_enqueue_styles_scripts() {
     // Enqueue Bootstrap CSS
     wp_enqueue_style('bootstrap-css', 'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css');
     
+    // Enqueue Bootstrap Multiselect CSS
+    wp_enqueue_style('bootstrap-multiselect-css', 'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/1.1.2/css/bootstrap-multiselect.min.css');
+
     // Enqueue your theme stylesheet
     wp_enqueue_style('condoapptheme-style', get_stylesheet_uri());
     
@@ -23,7 +25,6 @@ function condoapptheme_enqueue_styles_scripts() {
 }
 add_action('wp_enqueue_scripts', 'condoapptheme_enqueue_styles_scripts');
 
-// Enqueue the JavaScript file
 function condoapp_enqueue_scripts() {
     // Enqueue the existing AJAX script
     wp_register_script('condoapp-ajax', get_template_directory_uri() . '/condoapp-ajax.js', array('jquery'), null, true);
@@ -37,11 +38,14 @@ function condoapp_enqueue_scripts() {
     wp_enqueue_style('ion-rangeslider', get_template_directory_uri() . '/js/ion.rangeSlider-master/css/ion.rangeSlider.min.css');
     wp_enqueue_script('ion-rangeslider', get_template_directory_uri() . '/js/ion.rangeSlider-master/js/ion.rangeSlider.min.js', array('jquery'), null, true);
 
+    // Enqueue Bootstrap Multiselect JS
+    wp_enqueue_script('bootstrap-multiselect-js', 'https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/1.1.2/js/bootstrap-multiselect.min.js', array('jquery', 'bootstrap-js'), null, true);
+
     // Get all filter ranges
     $filter_ranges = get_filter_ranges();
 
-    // Enqueue your custom filters script that initializes Ion.RangeSlider
-    wp_register_script('condoapp-filters', get_template_directory_uri() . '/js/condoapp-filters.js', array('jquery', 'ion-rangeslider', 'condoapp-ajax'), null, true);
+    // Enqueue your custom filters script that initializes Ion.RangeSlider and Bootstrap Multiselect
+    wp_register_script('condoapp-filters', get_template_directory_uri() . '/js/condoapp-filters.js', array('jquery', 'ion-rangeslider', 'bootstrap-multiselect-js', 'condoapp-ajax'), null, true);
     wp_localize_script('condoapp-filters', 'condoapp_filter_data', $filter_ranges);
     wp_enqueue_script('condoapp-filters');
 }
@@ -75,46 +79,6 @@ function condoapp_load_more_units() {
 }
 add_action('wp_ajax_nopriv_load_more_units', 'condoapp_load_more_units');
 add_action('wp_ajax_load_more_units', 'condoapp_load_more_units');
-
-// function condoapp_filter_units_by_price() {
-//     // Verify the nonce for security
-//     check_ajax_referer('condoapp_nonce', 'nonce');
-
-//     // Debug: Check if the function is firing
-//     // echo 'Function condoapp_filter_units_by_price is firing.<br>';
-
-//     // Retrieve filters from AJAX request
-//     $filters = isset($_POST['filters']['price_range']) ? $_POST['filters']['price_range'] : array();
-
-//     // Debug: Output the received filters
-//     // echo 'Received filters: ' . json_encode($filters) . '<br>';
-//     // error_log('Received filters: ' . print_r($_POST['filters'], true));
-
-//     $limit = 10;
-//     $offset = 0; // Always start from the first set of units when filtering
-
-//     // Get units
-//     $units = get_filtered_units_sql($filters, $offset, $limit);
-
-//     // Debug: Output the number of units retrieved
-//     // echo 'Number of units retrieved: ' . count($units) . '<br>';
-//     // error_log('Number of units retrieved: ' . count($units));
-
-//     // Generate HTML for unit cards
-//     $html = '';
-//     foreach ($units as $unit) {
-//         $html .= condoapp_get_unit_card_html($unit);
-//     }
-
-//     // Debug: Output the generated HTML
-//     // echo 'Generated HTML: ' . htmlspecialchars($html) . '<br>';
-
-//     // Echo HTML and end AJAX request
-//     echo $html;
-//     wp_die();
-// }
-// add_action('wp_ajax_nopriv_filter_units_by_price', 'condoapp_filter_units_by_price');
-// add_action('wp_ajax_filter_units_by_price', 'condoapp_filter_units_by_price');
 
 // generates the html unit card
 function condoapp_get_unit_card_html_robust($unit) {
@@ -179,30 +143,6 @@ function condoapp_get_unit_card_html_robust($unit) {
     $html = ob_get_clean(); // Store the contents of the output buffer and clear it
     return $html;
 }
-
-// obtains the min and max price from database and uses this to inform what price range to make the slider
-// function get_price_range() {
-//     global $wpdb;
-
-//     // Query the highest and lowest prices
-//     $price_query = $wpdb->get_row("
-//         SELECT
-//             MIN(CAST(price AS UNSIGNED)) as min_price,
-//             MAX(CAST(price AS UNSIGNED)) as max_price
-//         FROM pre_con_unit_database_20230827_v4
-//     ");
-
-//     // Check if the query was successful and we have non-null prices
-//     if (is_null($price_query->min_price) || is_null($price_query->max_price)) {
-//         return array('min' => 0, 'max' => 0); // Default values if no prices are found
-//     }
-
-//     // Round the values to the nearest 100K
-//     $min_price = floor($price_query->min_price / 100000) * 100000;
-//     $max_price = ceil($price_query->max_price / 100000) * 100000;
-
-//     return array('min' => $min_price, 'max' => $max_price);
-// }
 
 // gets units from the database both initially on page load and based on filters set by user
 function get_filtered_units_sql($filters = array(), $offset = 0, $limit = 10) {

@@ -12,24 +12,32 @@ get_header(); ?>
 
             <!-- Price Range Filter -->
             <div class="filter-section">
-                <!-- <p class="filter-description">Select the price range for the units you are interested in:</p> -->
-                <!-- <label for="price-range">Price Range:</label> -->
                 <input type="text" id="price-range" name="price-range" value="" />
                 <input type="text" id="square-footage-range" name="square-footage-range" value="" />
+
+                <label for="bedrooms-filter"># of Bedrooms</label>
+                <select id="bedrooms-filter" multiple="multiple"></select>
+                
+                <label for="bathrooms-filter"># of Baths</label>
+                <select id="bathrooms-filter" multiple="multiple"></select>
+
+                <label for="unit-type-filter">Unit Type</label>
+                <select id="unit-type-filter" multiple="multiple"></select>
+
+                <label for="developer-filter">Developer</label>
+                <select id="developer-filter" multiple="multiple"></select>
+                
+                <label for="project-filter">Project</label>
+                <select id="project-filter" multiple="multiple"></select>
+                
+                <label for="den-filter"># of Dens</label>
+                <select id="den-filter" multiple="multiple"></select>
+
+                <button id="clear-filters-btn" class="btn btn-secondary">Clear Filters</button>
             </div>
         </aside>
 
-        <div class="dropdown">
-            <button class="dropbtn">Bedrooms</button>
-            <div class="dropdown-content">
-                <form id="bedrooms-filter">
-                    <label><input type="checkbox" name="bedrooms" value="1"> 1 Bedroom</label>
-                    <label><input type="checkbox" name="bedrooms" value="2"> 2 Bedrooms</label>
-                    <label><input type="checkbox" name="bedrooms" value="3"> 3 Bedrooms</label>
-                    <!-- Add more options as needed -->
-                </form>
-            </div>
-        </div>
+
 
         <!-- The main content area where unit cards will be displayed -->
         <section id="unit-cards" class="container mt-5">
