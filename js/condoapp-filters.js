@@ -6,14 +6,15 @@ jQuery(document).ready(function($) {
         resetDropdown('#bedrooms-filter');
         resetDropdown('#bathrooms-filter');
         resetDropdown('#unit-type-filter');
-        // resetDropdown('#pre-occupancy-deposit-filter');
         resetDropdown('#developer-filter');
         resetDropdown('#project-filter');
         resetDropdown('#den-filter');
+        // resetDropdown('#pre-occupancy-deposit-filter');
 
         // Reset slider filters
         resetSlider('#price-range');
         resetSlider('#square-footage-range');
+        // resetSlider('#pre-occupancy-deposit-filter');
         // ... reset other slider filters ...
 
         // Update global filter state
@@ -39,6 +40,8 @@ jQuery(document).ready(function($) {
                 max: ''  // Use appropriate default value
             }
         };
+
+        window.offset = 0; // Initialize with 10 as the first set of units is already loaded
 
         // Trigger filter update
         filterUnits();
@@ -139,6 +142,7 @@ jQuery(document).ready(function($) {
     // Initialize sliders
     initializeSlider("#price-range", condoapp_filter_data, 'price_range', 50000, ",");
     initializeSlider("#square-footage-range", condoapp_filter_data, 'square_footage_range', 50, ",");
+    // initializeSlider("#pre-occupancy-deposit-filter", condoapp_filter_data, 'pre_occupancy_deposit', 1, ",");
 
     // Initialize dropdowns
     initializeDropdown('#bedrooms-filter', 'bedrooms');

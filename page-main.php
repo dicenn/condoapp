@@ -14,6 +14,7 @@ get_header(); ?>
             <div class="filter-section">
                 <input type="text" id="price-range" name="price-range" value="" />
                 <input type="text" id="square-footage-range" name="square-footage-range" value="" />
+                <!-- <input type="text" id="pre-occupancy-deposit-filter" name="pre-occupancy-deposit-filter" value="" /> -->
 
                 <label for="bedrooms-filter"># of Bedrooms</label>
                 <select id="bedrooms-filter" multiple="multiple"></select>
@@ -26,6 +27,9 @@ get_header(); ?>
 
                 <label for="developer-filter">Developer</label>
                 <select id="developer-filter" multiple="multiple"></select>
+
+                <!-- <label for="pre-occupancy-deposit-filter">Pre-occupancy Deposit</label>
+                <select id="pre-occupancy-deposit-filter" multiple="multiple"></select> -->
                 
                 <label for="project-filter">Project</label>
                 <select id="project-filter" multiple="multiple"></select>

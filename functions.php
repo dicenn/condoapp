@@ -149,10 +149,16 @@ function get_filtered_units_sql($filters = array(), $offset = 0, $limit = 10) {
     global $wpdb;
 
     // Base SQL query
-    $sql = "SELECT *
+    $sql = "SELECT
+                *
             FROM condo_app.pre_con_unit_database_20230827_v4 u
-            LEFT JOIN condo_app.pre_con_pdf_jpg_database_20230827 j ON j.pdf_link = u.floor_plan_link
-            LEFT JOIN (select project as project_dd, deposit_date from condo_app.deposit_structure where deposit_occupancy = 'TRUE') d ON d.project_dd = u.project";
+                LEFT JOIN condo_app.pre_con_pdf_jpg_database_20230827 j ON j.pdf_link = u.floor_plan_link
+                LEFT JOIN (
+                    select
+                        project as project_dd
+                        ,CASE WHEN deposit_date LIKE '%/%/%' THEN DATE_FORMAT(STR_TO_DATE(deposit_date, '%m/%d/%Y'), '%Y-%m-%d') ELSE deposit_date END AS deposit_date
+                    from condo_app.deposit_structure
+                    where deposit_occupancy = 'TRUE') d ON d.project_dd = u.project";
 
     // WHERE clauses
     $where_clauses = array();
@@ -326,9 +332,10 @@ function condoapp_get_unit_card_html($unit) {
                'Beds: ' . esc_html($unit->bedrooms) . ' | ' .
                'Baths: ' . esc_html($unit->bathrooms) . ' | ' .
                'Sqft: ' . esc_html($unit->interior_size) . ' | ' .
-               'Occupancy: ' . esc_html($unit->occupancy_date) . ' | ' .
+            //    'Pre-occupancy deposit: ' . esc_html($unit->interior_size) . ' | ' .
+            //    'Occupancy: ' . esc_html($unit->occupancy_date) . ' | ' .
                'Developer: ' . esc_html($unit->developer) . ' | ' .
-            //    'Deposit Date: ' . (isset($unit->deposit_date) ? esc_html($unit->deposit_date) : 'N/A');
+               'Deposit Date: ' . (isset($unit->deposit_date) ? esc_html($unit->deposit_date) : 'N/A');
     $output .= '</div>'; // Close container
 
     return $output;
