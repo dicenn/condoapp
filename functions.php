@@ -158,9 +158,14 @@ function get_filtered_units_sql($filters = array(), $offset = 0, $limit = 10) {
                         project as project_dd
                         ,CASE WHEN deposit_date LIKE '%/%/%' THEN DATE_FORMAT(STR_TO_DATE(deposit_date, '%m/%d/%Y'), '%Y-%m-%d') ELSE deposit_date END AS deposit_date
                     from condo_app.deposit_structure
-                    where deposit_occupancy = 'TRUE') d ON d.project_dd = u.project";
-
-    // WHERE clauses
+                        where deposit_occupancy = 'TRUE') d ON d.project_dd = u.project
+                left join (
+                    select
+                        project as project_pd
+                        ,ROUND(SUM(deposit_percent), 2) as pre_occupancy_deposit
+                    FROM condo_app.deposit_structure
+                        WHERE deposit_occupancy = ''
+                    GROUP BY project) pd on pd.project_pd = u.project";
     $where_clauses = array();
 
     // Price range filter
@@ -174,25 +179,23 @@ function get_filtered_units_sql($filters = array(), $offset = 0, $limit = 10) {
     }
 
     // Occupancy date range filter
-    // if (isset($filters['occupancy_date_range']['min']) && isset($filters['occupancy_date_range']['max'])) {
-    //     $where_clauses[] = $wpdb->prepare("u.occupancy_date BETWEEN %s AND %s", $filters['occupancy_date_range']['min'], $filters['occupancy_date_range']['max']);
-    // }
+    if (isset($filters['occupancy_date_range']['min']) && isset($filters['occupancy_date_range']['max'])) {
+        $where_clauses[] = $wpdb->prepare("d.deposit_date BETWEEN %s AND %s", $filters['occupancy_date_range']['min'], $filters['occupancy_date_range']['max']);
+    }
 
     // Dropdown filters
-    $dropdown_filters = ['bedrooms', 'bathrooms', 'unit_type', 'developer', 'project', 'den'];
+    $dropdown_filters = ['bedrooms', 'bathrooms', 'unit_type', 'developer', 'project', 'den', 'pre_occupancy_deposit'];
     foreach ($dropdown_filters as $filter) {
         if (!empty($filters[$filter])) {
-            $where_clauses[] = "u.$filter IN ('" . implode("', '", array_map('esc_sql', $filters[$filter])) . "')";
+            // Use a different schema prefix for the pre_occupancy_deposit filter
+            if ($filter === 'pre_occupancy_deposit') {
+                $where_clauses[] = "pd.$filter IN ('" . implode("', '", array_map('esc_sql', $filters[$filter])) . "')";
+            } else {
+                $where_clauses[] = "u.$filter IN ('" . implode("', '", array_map('esc_sql', $filters[$filter])) . "')";
+            }
         }
-    }
-
-    // Pre-occupancy deposit filter
-    // Assuming this filter requires a special handling
-    if (!empty($filters['pre_occupancy_deposit'])) {
-        // Add your specific condition for pre_occupancy_deposit here
-        // Example: $where_clauses[] = "d.pre_occupancy_deposit IN ('" . implode("', '", array_map('esc_sql', $filters['pre_occupancy_deposit'])) . "')";
-    }
-
+    }    
+    
     // Append WHERE clauses if any
     if (!empty($where_clauses)) {
         $sql .= " WHERE " . implode(' AND ', $where_clauses);
@@ -223,11 +226,18 @@ function get_distinct_values($column) {
 function get_min_max_values($column) {
     global $wpdb;
     $query = $wpdb->get_row("
-        SELECT MIN($column) as min_value, MAX($column) as max_value 
-        FROM pre_con_unit_database_20230827_v4 u
+        SELECT
+            MIN($column) as min_value
+            ,MAX($column) as max_value 
+        FROM condo_app.pre_con_unit_database_20230827_v4 u
             LEFT JOIN condo_app.pre_con_pdf_jpg_database_20230827 j ON j.pdf_link = u.floor_plan_link
-            LEFT JOIN condo_app.deposit_structure d ON d.project = u.project AND deposit_occupancy = 'TRUE'
-    ");
+            LEFT JOIN (
+                select
+                    project as project_dd
+                    ,CASE WHEN deposit_date LIKE '%/%/%' THEN DATE_FORMAT(STR_TO_DATE(deposit_date, '%m/%d/%Y'), '%Y-%m-%d') ELSE deposit_date END AS deposit_date
+                from condo_app.deposit_structure
+                where deposit_occupancy = 'TRUE') d ON d.project_dd = u.project"
+    );
     return $query ?: ['min_value' => null, 'max_value' => null];
 }
 
@@ -235,14 +245,13 @@ function get_min_max_values($column) {
 function get_pre_occupancy_deposits() {
     global $wpdb;
     $query = "
-        SELECT
-            project,
+        SELECT DISTINCT
             ROUND(SUM(deposit_percent), 2) as pre_occupancy_deposit
         FROM condo_app.deposit_structure
         WHERE deposit_occupancy = ''
         GROUP BY project
     ";
-    $results = $wpdb->get_results($query, ARRAY_A);
+    $results = $wpdb->get_col($query);
     return $results ?: []; // Return an empty array if the query fails or returns no results
 }
 
@@ -332,8 +341,7 @@ function condoapp_get_unit_card_html($unit) {
                'Beds: ' . esc_html($unit->bedrooms) . ' | ' .
                'Baths: ' . esc_html($unit->bathrooms) . ' | ' .
                'Sqft: ' . esc_html($unit->interior_size) . ' | ' .
-            //    'Pre-occupancy deposit: ' . esc_html($unit->interior_size) . ' | ' .
-            //    'Occupancy: ' . esc_html($unit->occupancy_date) . ' | ' .
+            //    'Project Pre-occupancy deposit: ' . esc_html($unit->pre_occupancy_deposit_pd) . '% | ' .
                'Developer: ' . esc_html($unit->developer) . ' | ' .
                'Deposit Date: ' . (isset($unit->deposit_date) ? esc_html($unit->deposit_date) : 'N/A');
     $output .= '</div>'; // Close container
