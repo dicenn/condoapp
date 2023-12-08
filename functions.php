@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/vendor/autoload.php';
+use PhpOffice\PhpSpreadsheet\Calculation\Financial;
 
 // kill the wordpress admin bar at the top of the page in the browser
 add_filter('show_admin_bar', '__return_false');
@@ -360,7 +362,15 @@ function condoapp_get_unit_card_html($unit) {
     }
 
     // Calculate XIRR
-    $xirr = calculateXIRR($unitProcessedData['net_cash_flows'], $unitProcessedData['corresponding_date']);
+    $xirrResult = calculateXIRR($unitProcessedData['net_cash_flows'], $unitProcessedData['corresponding_date']);
+
+    if (is_numeric($xirrResult)) {
+        // It's a number, so format it as a percentage
+        $xirrFormatted = esc_html(number_format($xirrResult * 100, 2)) . '%';
+    } else {
+        // It's an error message, so handle it accordingly
+        $xirrFormatted = $xirrResult; // Display the error message
+    }
 
     // Generate the unit card HTML
     $output = '<div style="border: 1px solid #ddd; margin-bottom: 10px;">';
@@ -371,10 +381,10 @@ function condoapp_get_unit_card_html($unit) {
                 'Beds: ' . esc_html($unit->bedrooms) . ' | ' .
                 'Baths: ' . esc_html($unit->bathrooms) . ' | ' .
                 'Sqft: ' . esc_html($unit->interior_size) . ' | ' .
-            //    'Project Pre-occupancy deposit: ' . esc_html($unit->pre_occupancy_deposit_pd) . '% | ' .
+                // 'Project Pre-occupancy deposit: ' . esc_html($unit->pre_occupancy_deposit_pd) . '% | ' .
                 'Developer: ' . esc_html($unit->developer) . ' | ' .
-                'Deposit Date: ' . (isset($unit->deposit_date) ? esc_html($unit->deposit_date) : 'N/A');
-                'XIRR: ' . esc_html(number_format($xirr * 100, 2)) . '%';
+                'Deposit Date: ' . (isset($unit->deposit_date) ? esc_html($unit->deposit_date) : 'N/A') . ' | ' .
+                'XIRR: ' . $xirrFormatted; // Corrected to use $xirrFormatted
     $output .= '</div>';
 
     return $output;
@@ -407,120 +417,220 @@ function process_and_calculate_cashflows($data, $holdingPeriod, $appreciationRat
         $data[$key]['rent'] = json_decode($row['rent'], true);
         $data[$key]['rent_expenses'] = json_decode($row['rent_expenses'], true);
         $data[$key]['rental_net_income'] = json_decode($row['rental_net_income'], true);
+        $holdingPeriod = $row['occupancy_index'] + 10;
 
-        // Set default values if not provided
-        if ($holdingPeriod === null) {
-            $holdingPeriod = $row['occupancy_index'];
-        }
-
-        if ($rent === null) {
-            // Find the first non-zero value in the 'rent' array
-            foreach ($data[$key]['rent'] as $rentValue) {
-                if ($rentValue > 0) {
-                    $rent = $rentValue;
-                    break;
-                }
+        foreach ($data[$key]['rent'] as $rentValue) {
+            if ($rentValue > 0) {
+                $rent = $rentValue;
+                break;
             }
         }
 
-       // Calculate net cash flows
-       $netCashFlows = [];
-       $price = $row['price']; // Assuming 'price' is a field in your data
-       $selling_costs = $row['selling_costs']; // Assuming 'selling_costs' is a field in your data
-       $mortgage_payments_year = $row['mortgage_payments_year']; // Assuming this is a field in your data
+        // Debugging: Print out the holding period for this unit
+        // echo "Project: {$row['project']}<br>";
+        // echo "Model: {$row['model']}<br>";
+        // echo "Unit: {$row['unit']}<br>";
+        // echo "Unit Key: {$key}, Holding Period: {$holdingPeriod}<br>";
 
-       for ($i = 0; $i < $holdingPeriod; $i++) {
-           $netCashFlow = -($data[$key]['deposits'][$i] ?? 0)
+        // Calculate net cash flows
+        $netCashFlows = [];
+        $price = $row['price']; // Assuming 'price' is a field in your data
+        $selling_costs = $row['selling_costs']; // Assuming 'selling_costs' is a field in your data
+        $mortgage_payments_year = $row['mortgage_payments_year']; // Assuming this is a field in your data
+
+        for ($i = 0; $i < $holdingPeriod; $i++) {
+            $netCashFlow = -($data[$key]['deposits'][$i] ?? 0)
                           - ($data[$key]['closing_costs'][$i] ?? 0)
                           - ($data[$key]['mortgage_payment'][$i] ?? 0)
                           + ($data[$key]['rental_net_income'][$i] ?? 0);
-           array_push($netCashFlows, $netCashFlow);
+            array_push($netCashFlows, $netCashFlow);
 
-           // Debugging output
-        //    echo "Period {$i}: Net Cash Flow = {$netCashFlow}<br>";
-       }
+            // Debugging output: Print each cash flow
+            // echo "Period {$i}: Net Cash Flow = {$netCashFlow}<br>";
+        }
 
-       // Calculate the sale price of the property at the end of the holding period
-       $salePrice = $price * pow((1 + $appreciationRate / $mortgage_payments_year), $holdingPeriod);
+        // Calculate the sale price of the property at the end of the holding period
+        // =(1+D13)^(1/12)-1
+        $salePrice = $price * pow(pow(1 + $appreciationRate,(1 / $mortgage_payments_year) ), $holdingPeriod);
 
-       // Calculate the selling costs
-       $sellingCosts = $salePrice * $selling_costs;
+        // Calculate the selling costs
+        $sellingCosts = $salePrice * $selling_costs;
 
-       // Calculate the amount remaining on the mortgage
-       $depositsSum = array_sum(array_slice($data[$key]['deposits'], 0, $holdingPeriod));
-       $principalSum = array_sum(array_slice($data[$key]['mortgage_principal'], 0, $holdingPeriod));
-       $mortgageRemaining = ($price - $depositsSum) - $principalSum;
+        // Calculate the amount remaining on the mortgage
+        $depositsSum = array_sum(array_slice($data[$key]['deposits'], 0, $holdingPeriod));
+        $principalSum = array_sum(array_slice($data[$key]['mortgage_principal'], 0, $holdingPeriod));
+        $mortgageRemaining = ($price - $depositsSum) - $principalSum;
 
-       // Adjust the last cash flow
-       $last_cashflow_addition = $salePrice - $sellingCosts - $mortgageRemaining;
-       $netCashFlows[$holdingPeriod - 1] += $last_cashflow_addition;
+        // Adjust the last cash flow
+        $last_cashflow_addition = $salePrice - $sellingCosts - $mortgageRemaining;
+        $netCashFlows[$holdingPeriod - 1] += $last_cashflow_addition;
 
-       // Debugging output
-    //    echo "Final Cash Flow: {$netCashFlows[$holdingPeriod - 1]}<br>";
+        // Debugging: Start the table
+        // echo "<table border='1'>";
+        // echo "<tr><th>Period</th><th>Deposits</th><th>Closing Costs</th><th>Mortgage Payment</th><th>Mortgage Principal</th><th>Rent</th><th>Rent Expenses</th><th>Rental Net Income</th><th>Total Net Cash Flow</th></tr>";
 
-       // Store the calculated net cash flows back into the data array
-       $data[$key]['net_cash_flows'] = $netCashFlows;
-   }
+        // for ($i = 0; $i < $holdingPeriod; $i++) {
+        //     // Print each cash flow in a table row
+        //     echo "<tr>";
+        //     echo "<td>{$i}</td>";
+        //     echo "<td>" . ($data[$key]['deposits'][$i] ?? 0) . "</td>";
+        //     echo "<td>" . ($data[$key]['closing_costs'][$i] ?? 0) . "</td>";
+        //     echo "<td>" . ($data[$key]['mortgage_payment'][$i] ?? 0) . "</td>";
+        //     echo "<td>" . ($data[$key]['mortgage_principal'][$i] ?? 0) . "</td>";
+        //     echo "<td>" . ($data[$key]['rent'][$i] ?? 0) . "</td>";
+        //     echo "<td>" . ($data[$key]['rent_expenses'][$i] ?? 0) . "</td>";
+        //     echo "<td>" . ($data[$key]['rental_net_income'][$i] ?? 0) . "</td>";
+        //     echo "<td>{$netCashFlows[$i]}</td>";
+        //     echo "</tr>";
+        // }
 
-   return $data;
-}
+        // // Debugging: Close the table and print additional data
+        // echo "</table>";
+        // echo "Original Price for Unit {$key}: {$price}<br>";
+        // echo "Appreciation rate for Unit {$key}: {$appreciationRate}<br>";
+        // echo "Mortgage payments per year for Unit {$key}: {$mortgage_payments_year}<br>";
+        // echo "Holding period for Unit {$key}: {$holdingPeriod}<br>";
+        // echo "Sale Price for Unit {$key}: {$salePrice}<br>";
+        // echo "Selling Costs for Unit {$key}: {$sellingCosts}<br>";
+        // echo "Mortgage Remaining for Unit {$key}: {$mortgageRemaining}<br>";
+        // echo "Final Cash Flow for Unit {$key}: {$netCashFlows[$holdingPeriod - 1]}<br>";
+        // echo "Total number of cash flows for Unit {$key}: " . count($netCashFlows) . "<br>";
 
-function calculateXIRR($netCashFlows, $correspondingDates) {
-    // Assuming $netCashFlows and $correspondingDates are arrays of equal length
-    // and $correspondingDates are in 'Y-m-d' format
+        // Debugging: Print the final cash flow
+        // echo "Final Cash Flow for Unit {$key}: {$netCashFlows[$holdingPeriod - 1]}<br>";
 
-    // Check if arrays are empty or if the first cash flow is zero
-    if (empty($netCashFlows) || $netCashFlows[0] == 0) {
-        return 'Error: Invalid cash flow data';
+        // Debugging: Print the total number of cash flows for this unit
+        // echo "Total number of cash flows for Unit {$key}: " . count($netCashFlows) . "<br>";
+
+        // Store the calculated net cash flows back into the data array
+        $data[$key]['net_cash_flows'] = $netCashFlows;
     }
 
-    // Convert date strings to DateTime objects
+    return $data;
+}
+
+// function calculateXIRR_old($netCashFlows, $correspondingDateStrings) {
+//     // Debugging: Output the raw date strings and net cash flows
+//     // echo "Raw date strings: " . $correspondingDateStrings . "<br>";
+//     // echo "Net cash flows: ";
+//     // print_r($netCashFlows);
+//     // echo "<br>";
+
+//     // Transform the date strings into a JSON format
+//     $jsonFormattedDateStrings = preg_replace('/(\d{4}-\d{2}-\d{2})/', '"$1"', $correspondingDateStrings);
+
+//     // Debugging: Output the JSON-formatted date strings
+//     // echo "JSON-formatted date strings: " . $jsonFormattedDateStrings . "<br>";
+
+//     // Decode the JSON-formatted string into an array
+//     $correspondingDatesArray = json_decode($jsonFormattedDateStrings, true);
+
+//     // Debugging: Output the decoded array
+//     // echo "Decoded array: ";
+//     // print_r($correspondingDatesArray);
+//     // echo "<br>";
+
+//     // Check if the decoding was successful and the result is an array
+//     if (!is_array($correspondingDatesArray)) {
+//         return 'Error: Invalid date format';
+//     }
+
+//     // Convert the date strings to DateTime objects
+//     $dates = array_map(function($date) {
+//         return new DateTime($date);
+//     }, $correspondingDatesArray);
+
+//     // Initialize variables
+//     $xirr = 0.1; // Initial guess for the rate
+//     $maxIterations = 100;
+//     $tolerance = 0.0001;
+
+//     for ($i = 0; $i < $maxIterations; $i++) {
+//         $newtonRaphsonStep = calculateNewtonRaphsonStep($netCashFlows, $dates, $xirr);
+
+//         // Debugging: Output the current iteration, XIRR value, and Newton-Raphson step
+//         // echo "Iteration $i: XIRR = $xirr<br>";
+//         // echo "Newton-Raphson Step: ";
+//         // print_r($newtonRaphsonStep);
+//         // echo "<br>";
+
+//         // Check for division by zero
+//         if ($newtonRaphsonStep['denominator'] == 0) {
+//             return 'Error: Division by zero encountered';
+//         }
+
+//         // Update the XIRR value
+//         $xirr -= $newtonRaphsonStep['numerator'] / $newtonRaphsonStep['denominator'];
+
+//         // Check if the result is within the tolerance
+//         if (abs($newtonRaphsonStep['numerator']) < $tolerance) {
+//             return $xirr;
+//         }
+//     }
+
+//     return 'Error: XIRR calculation did not converge';
+// }
+
+// function calculateNewtonRaphsonStep($cashFlows, $dates, $rate) {
+//     $numerator = 0;
+//     $denominator = 0;
+//     $baseDate = $dates[0];
+
+//     foreach ($cashFlows as $i => $cf) {
+//         $days = $baseDate->diff($dates[$i])->days;
+//         $denominatorTerm = pow(1 + $rate, $days / 365);
+
+//         // Debugging: Output each cash flow, days, and denominator term
+//         // echo "Cash Flow $i: $cf, Days: $days, Denominator Term: $denominatorTerm<br>";
+
+//         // Avoid division by zero
+//         if ($denominatorTerm == 0) {
+//             return ['numerator' => 0, 'denominator' => 0];
+//         }
+
+//         $numerator += $cf / $denominatorTerm;
+//         $denominator += (-$days / 365) * $cf / pow($denominatorTerm, 2);
+//     }
+
+//     return ['numerator' => $numerator, 'denominator' => $denominator];
+// }
+
+function calculateXIRR($netCashFlows, $correspondingDateStrings) {
+    // Preprocess the date strings if they are not in proper JSON format
+    $jsonFormattedDateStrings = preg_replace('/(\d{4}-\d{2}-\d{2})/', '"$1"', $correspondingDateStrings);
+    $correspondingDatesArray = json_decode($jsonFormattedDateStrings, true);
+
+    // Check if the decoding was successful and the result is an array
+    if (!is_array($correspondingDatesArray)) {
+        return 'Error: Invalid date format';
+    }
+
+    // Ensure the dates array is the same length as the cash flows array
+    $correspondingDatesArray = array_slice($correspondingDatesArray, 0, count($netCashFlows));
+
+    // Convert the date strings to DateTime objects
     $dates = array_map(function($date) {
         return new DateTime($date);
-    }, $correspondingDates);
+    }, $correspondingDatesArray);
 
-    // Initialize variables
-    $xirr = 0.1; // Initial guess for the rate
-    $maxIterations = 100;
-    $tolerance = 0.0001;
+    // Convert DateTime objects to Excel date serial numbers
+    $excelDates = array_map(function($date) {
+        return PhpOffice\PhpSpreadsheet\Shared\Date::dateTimeToExcel($date);
+    }, $dates);
 
-    for ($i = 0; $i < $maxIterations; $i++) {
-        $newtonRaphsonStep = calculateNewtonRaphsonStep($netCashFlows, $dates, $xirr);
-        
-        // Check for division by zero
-        if ($newtonRaphsonStep['denominator'] == 0) {
-            return 'Error: Division by zero encountered';
-        }
+    // Debugging: Output the cash flows and dates
+    // echo "<pre>Cash Flows: ";
+    // print_r($netCashFlows);
+    // echo "Dates: ";
+    // print_r($excelDates);
+    // echo "</pre>";
 
-        // Update the XIRR value
-        $xirr -= $newtonRaphsonStep['numerator'] / $newtonRaphsonStep['denominator'];
-
-        // Check if the result is within the tolerance
-        if (abs($newtonRaphsonStep['numerator']) < $tolerance) {
-            return $xirr;
-        }
+    try {
+        // Calculate XIRR using PhpSpreadsheet's Financial class
+        $xirr = Financial::XIRR($netCashFlows, $excelDates);
+        return $xirr;
+    } catch (Exception $e) {
+        // Handle exceptions, such as non-converging calculations
+        return 'Error: ' . $e->getMessage();
     }
-
-    return 'Error: XIRR calculation did not converge';
-}
-
-function calculateNewtonRaphsonStep($cashFlows, $dates, $rate) {
-    $numerator = 0;
-    $denominator = 0;
-    $baseDate = $dates[0];
-
-    foreach ($cashFlows as $i => $cf) {
-        $days = $baseDate->diff($dates[$i])->days;
-        $denominatorTerm = pow(1 + $rate, $days / 365);
-
-        // Avoid division by zero
-        if ($denominatorTerm == 0) {
-            return ['numerator' => 0, 'denominator' => 0];
-        }
-
-        $numerator += $cf / $denominatorTerm;
-        $denominator += (-$days / 365) * $cf / pow($denominatorTerm, 2);
-    }
-
-    return ['numerator' => $numerator, 'denominator' => $denominator];
 }
