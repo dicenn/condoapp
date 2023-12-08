@@ -344,8 +344,9 @@ function condoapp_get_unit_card_html($unit) {
     // Fetch all cash flow data
     $cashflowData = fetch_cashflow_data();
 
+    $appreciationRate = 0.06;
     // Process and calculate cash flows for the specific unit
-    $processedData = process_and_calculate_cashflows($cashflowData, null, 0.06, null);
+    $processedData = process_and_calculate_cashflows($cashflowData, null, $appreciationRate, null);
 
     // Find the processed data for the current unit
     $unitProcessedData = null;
@@ -359,6 +360,16 @@ function condoapp_get_unit_card_html($unit) {
     // Check if processed data was found
     if ($unitProcessedData === null) {
         return 'No cash flow data available for this unit.';
+    }
+    
+    $holdingPeriod = $unitProcessedData['occupancy_index'];
+    $rent = 0;
+    // Find the first non-zero rent value
+    foreach ($unitProcessedData['rent'] as $rentValue) {
+        if ($rentValue > 0) {
+            $rent = $rentValue;
+            break;
+        }
     }
 
     // Calculate XIRR
@@ -385,6 +396,17 @@ function condoapp_get_unit_card_html($unit) {
                 'Developer: ' . esc_html($unit->developer) . ' | ' .
                 'Deposit Date: ' . (isset($unit->deposit_date) ? esc_html($unit->deposit_date) : 'N/A') . ' | ' .
                 'XIRR: ' . $xirrFormatted; // Corrected to use $xirrFormatted
+
+    // Add input fields for holding period, rent, and appreciation rate
+    $output .= '<div>';
+    $output .= 'Holding Period (Years): <input type="number" class="holding-period" value="' . esc_attr($holdingPeriod) . '"><br>';
+    $output .= 'Rent ($): <input type="number" class="rent" value="' . esc_attr($rent) . '"><br>';
+    $output .= 'Appreciation Rate (%): <input type="number" class="appreciation-rate" value="' . esc_attr($appreciationRate) . '">';
+    $output .= '</div>';
+
+    // Add a button to trigger the recalculation
+    $output .= '<button class="calculate-xirr" data-unit-id="' . esc_attr($unit->id) . '">Calculate XIRR</button>';
+
     $output .= '</div>';
 
     return $output;
