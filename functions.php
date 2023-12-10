@@ -52,11 +52,11 @@ function condoapp_enqueue_scripts() {
     wp_enqueue_script('condoapp-filters');
 
     // Enqueue the IRR calculator script
-    // wp_enqueue_script('condoapp-irr-calculator', get_template_directory_uri() . '/js/condoapp-irr.js', array('jquery'), null, true);
-    // wp_localize_script('condoapp-irr-calculator', 'condoapp_irr', array(
-    //     'ajax_url' => admin_url('admin-ajax.php'),
-    //     'nonce'    => wp_create_nonce('condoapp_irr_nonce') // Specific nonce for IRR AJAX actions
-    // ));
+    wp_enqueue_script('condoapp-irr-calculator', get_template_directory_uri() . '/js/condoapp-irr.js', array('jquery'), null, true);
+    wp_localize_script('condoapp-irr-calculator', 'condoapp_irr_object', array(
+        'ajax_url' => admin_url('admin-ajax.php'),
+        'nonce'    => wp_create_nonce('condoapp_irr_nonce') // Specific nonce for IRR AJAX actions
+    ));
 }
 add_action('wp_enqueue_scripts', 'condoapp_enqueue_scripts');
 
@@ -83,7 +83,7 @@ function condoapp_load_more_units() {
 
     // Echo HTML and SQL query for debugging (remove SQL echo in production)
     echo $html . "<!-- SQL Debug: " . htmlspecialchars($debug_sql) . " -->";
-    echo "SQL Debug: " . htmlspecialchars($debug_sql);
+    // echo "SQL Debug: " . htmlspecialchars($debug_sql);
     wp_die();
 }
 add_action('wp_ajax_nopriv_load_more_units', 'condoapp_load_more_units');
@@ -394,22 +394,20 @@ function condoapp_get_unit_card_html($unit) {
                 'Beds: ' . esc_html($unit->bedrooms) . ' | ' .
                 'Baths: ' . esc_html($unit->bathrooms) . ' | ' .
                 'Sqft: ' . esc_html($unit->interior_size) . ' | ' .
-                // 'Project Pre-occupancy deposit: ' . esc_html($unit->pre_occupancy_deposit_pd) . '% | ' .
                 'Developer: ' . esc_html($unit->developer) . ' | ' .
                 'Deposit Date: ' . (isset($unit->deposit_date) ? esc_html($unit->deposit_date) : 'N/A') . ' | ' .
-                'XIRR: ' . $xirrFormatted; // Corrected to use $xirrFormatted
+                'XIRR: <span class="xirr-result">' . $xirrFormatted . '</span>';
 
-    $output .= '<div>';
-    $output .= 'Holding Period (Years): <input type="number" class="holding-period" value="' . esc_attr($holdingPeriod) . '"><br>';
-    $output .= 'Rent ($): <input type="number" class="rent" value="' . esc_attr($rent) . '"><br>';
-    $output .= 'Appreciation Rate (%): <input type="number" class="appreciation-rate" value="' . esc_attr($appreciationRate) . '">';
-    $output .= '</div>';
-
-    // Add a button to trigger the recalculation
+    // Add interactive elements in a container
+    $output .= '<div class="unit-card-controls">';
+    $output .= '<label>Holding Period (Years): <input type="number" class="holding-period" value="' . esc_attr($holdingPeriod) . '"></label><br>';
+    $output .= '<label>Rent ($): <input type="number" class="rent" value="' . esc_attr($rent) . '"></label><br>';
+    $output .= '<label>Appreciation Rate (%): <input type="number" class="appreciation-rate" value="' . esc_attr($appreciationRate) . '"></label>';
     $output .= '<button class="calculate-xirr" data-unit-id="' . esc_attr($unit->id) . '">Calculate XIRR</button>';
+    $output .= '</div>'; // Close interactive elements container
 
-    $output .= '</div>';
-
+    $output .= '</div>'; // Close unit card container
+    
     return $output;
 }
 
@@ -556,11 +554,11 @@ function calculateXIRR($netCashFlows, $correspondingDateStrings) {
     }, $dates);
 
     // Debugging: Output the cash flows and dates
-    echo "<pre>Cash Flows: ";
-    print_r($netCashFlows);
-    echo "Dates: ";
-    print_r($excelDates);
-    echo "</pre>";
+    // echo "<pre>Cash Flows: ";
+    // print_r($netCashFlows);
+    // echo "Dates: ";
+    // print_r($excelDates);
+    // echo "</pre>";
 
     try {
         // Calculate XIRR using PhpSpreadsheet's Financial class
@@ -572,88 +570,62 @@ function calculateXIRR($netCashFlows, $correspondingDateStrings) {
     }
 }
 
-// function calculateXIRR_old($netCashFlows, $correspondingDateStrings) {
-//     // Debugging: Output the raw date strings and net cash flows
-//     // echo "Raw date strings: " . $correspondingDateStrings . "<br>";
-//     // echo "Net cash flows: ";
-//     // print_r($netCashFlows);
-//     // echo "<br>";
+function recalculate_xirr_ajax_handler() {
+    echo 'AJAX handler triggered.';
+    // Check for nonce for security
+    check_ajax_referer('condoapp_irr_nonce', 'nonce');
 
-//     // Transform the date strings into a JSON format
-//     $jsonFormattedDateStrings = preg_replace('/(\d{4}-\d{2}-\d{2})/', '"$1"', $correspondingDateStrings);
+    // Echo received data for debugging
+    echo '<pre>Received Data: ';
+    print_r($_POST);
+    echo '</pre>';
 
-//     // Debugging: Output the JSON-formatted date strings
-//     // echo "JSON-formatted date strings: " . $jsonFormattedDateStrings . "<br>";
+    $unit_id = isset($_POST['unit_id']) ? intval($_POST['unit_id']) : 0;
+    $holding_period = isset($_POST['holding_period']) ? intval($_POST['holding_period']) : null;
+    $rent = isset($_POST['rent']) ? floatval($_POST['rent']) : null;
+    $appreciation_rate = isset($_POST['appreciation_rate']) ? floatval($_POST['appreciation_rate']) : 0.06;
 
-//     // Decode the JSON-formatted string into an array
-//     $correspondingDatesArray = json_decode($jsonFormattedDateStrings, true);
+    // Echo processed values for debugging
+    echo "<pre>Processed Data: Unit ID: $unit_id, Holding Period: $holding_period, Rent: $rent, Appreciation Rate: $appreciation_rate</pre>";
 
-//     // Debugging: Output the decoded array
-//     // echo "Decoded array: ";
-//     // print_r($correspondingDatesArray);
-//     // echo "<br>";
+    // Fetch all cash flow data
+    $cashflowData = fetch_cashflow_data();
+    // Process and calculate cash flows for the specific unit
 
-//     // Check if the decoding was successful and the result is an array
-//     if (!is_array($correspondingDatesArray)) {
-//         return 'Error: Invalid date format';
-//     }
+    $processedData = process_and_calculate_cashflows($cashflowData, $holding_period, $appreciation_rate, $rent);
+    
+    // Echo processed cash flow data for debugging
+    // echo '<pre>Processed Cash Flows: ';
+    // print_r($processedData);
+    // echo '</pre>';
 
-//     // Convert the date strings to DateTime objects
-//     $dates = array_map(function($date) {
-//         return new DateTime($date);
-//     }, $correspondingDatesArray);
+    // Find the processed data for the current unit
+    $unitProcessedData = null;
+    foreach ($processedData as $data) {
+        if ($data['id'] == $unit_id) {
+            $unitProcessedData = $data;
+            break;
+        }
+    }
 
-//     // Initialize variables
-//     $xirr = 0.1; // Initial guess for the rate
-//     $maxIterations = 100;
-//     $tolerance = 0.0001;
+    if ($unitProcessedData === null) {
+        echo 'No cash flow data available for this unit.';
+        wp_die();
+    }
 
-//     for ($i = 0; $i < $maxIterations; $i++) {
-//         $newtonRaphsonStep = calculateNewtonRaphsonStep($netCashFlows, $dates, $xirr);
+    // Calculate XIRR
+    $xirrResult = calculateXIRR($unitProcessedData['net_cash_flows'], $unitProcessedData['corresponding_date']);
 
-//         // Debugging: Output the current iteration, XIRR value, and Newton-Raphson step
-//         // echo "Iteration $i: XIRR = $xirr<br>";
-//         // echo "Newton-Raphson Step: ";
-//         // print_r($newtonRaphsonStep);
-//         // echo "<br>";
-
-//         // Check for division by zero
-//         if ($newtonRaphsonStep['denominator'] == 0) {
-//             return 'Error: Division by zero encountered';
-//         }
-
-//         // Update the XIRR value
-//         $xirr -= $newtonRaphsonStep['numerator'] / $newtonRaphsonStep['denominator'];
-
-//         // Check if the result is within the tolerance
-//         if (abs($newtonRaphsonStep['numerator']) < $tolerance) {
-//             return $xirr;
-//         }
-//     }
-
-//     return 'Error: XIRR calculation did not converge';
-// }
-
-// function calculateNewtonRaphsonStep($cashFlows, $dates, $rate) {
-//     $numerator = 0;
-//     $denominator = 0;
-//     $baseDate = $dates[0];
-
-//     foreach ($cashFlows as $i => $cf) {
-//         $days = $baseDate->diff($dates[$i])->days;
-//         $denominatorTerm = pow(1 + $rate, $days / 365);
-
-//         // Debugging: Output each cash flow, days, and denominator term
-//         // echo "Cash Flow $i: $cf, Days: $days, Denominator Term: $denominatorTerm<br>";
-
-//         // Avoid division by zero
-//         if ($denominatorTerm == 0) {
-//             return ['numerator' => 0, 'denominator' => 0];
-//         }
-
-//         $numerator += $cf / $denominatorTerm;
-//         $denominator += (-$days / 365) * $cf / pow($denominatorTerm, 2);
-//     }
-
-//     return ['numerator' => $numerator, 'denominator' => $denominator];
-// }
+    // Echo XIRR calculation result for debugging
+    echo '<pre>XIRR Calculation Result: ' . $xirrResult . '</pre>';
+    
+    if (is_numeric($xirrResult)) {
+        $xirrFormatted = number_format($xirrResult * 100, 2) . '%';
+        wp_send_json_success(array('new_xirr' => $xirrFormatted));
+    } else {
+        wp_send_json_error('Error: ' . $xirrResult);
+    }
+    wp_die(); // Terminate to ensure no further output is sent
+}
+add_action('wp_ajax_recalculate_xirr', 'recalculate_xirr_ajax_handler');
+add_action('wp_ajax_nopriv_recalculate_xirr', 'recalculate_xirr_ajax_handler');

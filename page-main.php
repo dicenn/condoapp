@@ -45,7 +45,7 @@ get_header(); ?>
         <section id="unit-cards" class="container mt-5">
             <?php
             $query_data = get_filtered_units_sql(array());
-            echo '<pre>SQL Query: ' . htmlspecialchars($query_data['sql']) . '</pre>';
+            // echo '<pre>SQL Query: ' . htmlspecialchars($query_data['sql']) . '</pre>';
 
             foreach ($query_data['results'] as $unit) {
                 echo condoapp_get_unit_card_html($unit);
