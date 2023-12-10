@@ -344,7 +344,9 @@ function condoapp_get_unit_card_html($unit) {
     // Fetch all cash flow data
     $cashflowData = fetch_cashflow_data();
 
+    // Set a default appreciation rate
     $appreciationRate = 0.06;
+
     // Process and calculate cash flows for the specific unit
     $processedData = process_and_calculate_cashflows($cashflowData, null, $appreciationRate, null);
 
@@ -361,10 +363,10 @@ function condoapp_get_unit_card_html($unit) {
     if ($unitProcessedData === null) {
         return 'No cash flow data available for this unit.';
     }
-    
+
+    // Determine the default values for holding period and rent
     $holdingPeriod = $unitProcessedData['occupancy_index'];
     $rent = 0;
-    // Find the first non-zero rent value
     foreach ($unitProcessedData['rent'] as $rentValue) {
         if ($rentValue > 0) {
             $rent = $rentValue;
@@ -397,7 +399,6 @@ function condoapp_get_unit_card_html($unit) {
                 'Deposit Date: ' . (isset($unit->deposit_date) ? esc_html($unit->deposit_date) : 'N/A') . ' | ' .
                 'XIRR: ' . $xirrFormatted; // Corrected to use $xirrFormatted
 
-    // Add input fields for holding period, rent, and appreciation rate
     $output .= '<div>';
     $output .= 'Holding Period (Years): <input type="number" class="holding-period" value="' . esc_attr($holdingPeriod) . '"><br>';
     $output .= 'Rent ($): <input type="number" class="rent" value="' . esc_attr($rent) . '"><br>';
@@ -531,6 +532,46 @@ function process_and_calculate_cashflows($data, $holdingPeriod, $appreciationRat
     return $data;
 }
 
+function calculateXIRR($netCashFlows, $correspondingDateStrings) {
+    // Preprocess the date strings if they are not in proper JSON format
+    $jsonFormattedDateStrings = preg_replace('/(\d{4}-\d{2}-\d{2})/', '"$1"', $correspondingDateStrings);
+    $correspondingDatesArray = json_decode($jsonFormattedDateStrings, true);
+
+    // Check if the decoding was successful and the result is an array
+    if (!is_array($correspondingDatesArray)) {
+        return 'Error: Invalid date format';
+    }
+
+    // Ensure the dates array is the same length as the cash flows array
+    $correspondingDatesArray = array_slice($correspondingDatesArray, 0, count($netCashFlows));
+
+    // Convert the date strings to DateTime objects
+    $dates = array_map(function($date) {
+        return new DateTime($date);
+    }, $correspondingDatesArray);
+
+    // Convert DateTime objects to Excel date serial numbers
+    $excelDates = array_map(function($date) {
+        return PhpOffice\PhpSpreadsheet\Shared\Date::dateTimeToExcel($date);
+    }, $dates);
+
+    // Debugging: Output the cash flows and dates
+    echo "<pre>Cash Flows: ";
+    print_r($netCashFlows);
+    echo "Dates: ";
+    print_r($excelDates);
+    echo "</pre>";
+
+    try {
+        // Calculate XIRR using PhpSpreadsheet's Financial class
+        $xirr = Financial::XIRR($netCashFlows, $excelDates);
+        return $xirr;
+    } catch (Exception $e) {
+        // Handle exceptions, such as non-converging calculations
+        return 'Error: ' . $e->getMessage();
+    }
+}
+
 // function calculateXIRR_old($netCashFlows, $correspondingDateStrings) {
 //     // Debugging: Output the raw date strings and net cash flows
 //     // echo "Raw date strings: " . $correspondingDateStrings . "<br>";
@@ -616,43 +657,3 @@ function process_and_calculate_cashflows($data, $holdingPeriod, $appreciationRat
 
 //     return ['numerator' => $numerator, 'denominator' => $denominator];
 // }
-
-function calculateXIRR($netCashFlows, $correspondingDateStrings) {
-    // Preprocess the date strings if they are not in proper JSON format
-    $jsonFormattedDateStrings = preg_replace('/(\d{4}-\d{2}-\d{2})/', '"$1"', $correspondingDateStrings);
-    $correspondingDatesArray = json_decode($jsonFormattedDateStrings, true);
-
-    // Check if the decoding was successful and the result is an array
-    if (!is_array($correspondingDatesArray)) {
-        return 'Error: Invalid date format';
-    }
-
-    // Ensure the dates array is the same length as the cash flows array
-    $correspondingDatesArray = array_slice($correspondingDatesArray, 0, count($netCashFlows));
-
-    // Convert the date strings to DateTime objects
-    $dates = array_map(function($date) {
-        return new DateTime($date);
-    }, $correspondingDatesArray);
-
-    // Convert DateTime objects to Excel date serial numbers
-    $excelDates = array_map(function($date) {
-        return PhpOffice\PhpSpreadsheet\Shared\Date::dateTimeToExcel($date);
-    }, $dates);
-
-    // Debugging: Output the cash flows and dates
-    // echo "<pre>Cash Flows: ";
-    // print_r($netCashFlows);
-    // echo "Dates: ";
-    // print_r($excelDates);
-    // echo "</pre>";
-
-    try {
-        // Calculate XIRR using PhpSpreadsheet's Financial class
-        $xirr = Financial::XIRR($netCashFlows, $excelDates);
-        return $xirr;
-    } catch (Exception $e) {
-        // Handle exceptions, such as non-converging calculations
-        return 'Error: ' . $e->getMessage();
-    }
-}
