@@ -1,4 +1,18 @@
-WITH units AS (
+WITH RECURSIVE month_offset AS (
+    SELECT 
+        0 AS month_offset,
+        CURDATE() AS corresponding_date,
+        DATE_FORMAT(CURDATE(), '%M %Y') AS formatted_date
+    UNION ALL
+    SELECT 
+        month_offset + 1,
+        DATE_ADD(CURDATE(), INTERVAL (month_offset + 1) MONTH) AS corresponding_date,
+        DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL (month_offset + 1) MONTH), '%M %Y') AS formatted_date
+    FROM month_offset
+    WHERE month_offset < 500
+)
+
+,units AS (
 	select distinct
 		id
 		,project
@@ -13,6 +27,9 @@ WITH units AS (
 	where true
 		-- and project = '75_James'
 )
+
+FROM NumberSeries;
+
 
 ,deposits_staging as (
 	SELECT
@@ -142,7 +159,7 @@ WITH units AS (
 		,coalesce(round(rent * pow(1 + rental_appreciation_percent_monthly,mo.month_offset)),0) as rent
 		,coalesce(round(rent_expenses / rent * round(rent * pow(1 + rental_appreciation_percent_monthly,mo.month_offset))),0) as rent_expenses
 		,coalesce(round(rent * pow(1 + rental_appreciation_percent_monthly,mo.month_offset)) - round(rent_expenses / rent * round(rent * pow(1 + rental_appreciation_percent_monthly,mo.month_offset))),0) as rental_net_income
-	FROM condo_app.month_offset mo
+	FROM month_offset mo
 		CROSS JOIN (SELECT distinct id, project ,model, unit, price from units) upm
 		LEFT JOIN mortgage m on m.month_offset <= mo.month_offset and m.id = upm.id -- and m.project = upm.project and m.model = upm.model and m.unit = upm.unit
 		left join deposits d on mo.month_offset = d.month_offset and d.id = upm.id -- and d.project = upm.project and d.model = upm.model and d.unit = upm.unit
@@ -246,8 +263,8 @@ SELECT
     land_transfer_tax,
     occupancy_index,
     CONCAT('[', GROUP_CONCAT(month_offset ORDER BY month_offset), ']') AS months_from_today,
-    CONCAT('[', GROUP_CONCAT(DATE_FORMAT(corresponding_date, '%Y-%m-%d') ORDER BY month_offset), ']') AS corresponding_date,
-    CONCAT('[', GROUP_CONCAT(formatted_date ORDER BY month_offset), ']') AS formatted_date,
+	CONCAT('[', GROUP_CONCAT('\"', DATE_FORMAT(corresponding_date, '%Y-%m-%d'), '\"' ORDER BY month_offset), ']') AS corresponding_date,
+	CONCAT('[', GROUP_CONCAT('\"', formatted_date, '\"' ORDER BY month_offset), ']') AS formatted_date,
     CONCAT('[', GROUP_CONCAT(deposit ORDER BY month_offset), ']') AS deposits,
     CONCAT('[', GROUP_CONCAT(closing_costs ORDER BY month_offset), ']') AS closing_costs,
     CONCAT('[', GROUP_CONCAT(month_since_occupancy ORDER BY month_offset), ']') AS months_from_occupancy,

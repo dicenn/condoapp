@@ -355,6 +355,34 @@ function condoapp_get_unit_card_html($unit) {
     foreach ($processedData as $data) {
         if ($data['id'] == $unit->id) {
             $unitProcessedData = $data;
+            // Debugging: Print detailed cash flow information in a table
+            // echo "<table border='1'>";
+            // echo "<tr><th>Period</th><th>Deposits</th><th>Closing Costs</th><th>Mortgage Payment</th><th>Mortgage Principal</th><th>Rent</th><th>Rent Expenses</th><th>Rental Net Income</th><th>Total Net Cash Flow</th></tr>";
+        
+            // for ($i = 0; $i < count($unitProcessedData['net_cash_flows']); $i++) {
+            //     echo "<tr>";
+            //     echo "<td>{$i}</td>";
+            //     echo "<td>" . ($unitProcessedData['deposits'][$i] ?? 0) . "</td>";
+            //     echo "<td>" . ($unitProcessedData['closing_costs'][$i] ?? 0) . "</td>";
+            //     echo "<td>" . ($unitProcessedData['mortgage_payment'][$i] ?? 0) . "</td>";
+            //     echo "<td>" . ($unitProcessedData['mortgage_principal'][$i] ?? 0) . "</td>";
+            //     echo "<td>" . ($unitProcessedData['rent'][$i] ?? 0) . "</td>";
+            //     echo "<td>" . ($unitProcessedData['rent_expenses'][$i] ?? 0) . "</td>";
+            //     echo "<td>" . ($unitProcessedData['rental_net_income'][$i] ?? 0) . "</td>";
+            //     echo "<td>" . ($unitProcessedData['net_cash_flows'][$i] ?? 0) . "</td>";
+            //     echo "</tr>";
+            // }
+            // echo "</table>";
+        
+            // // Additional data printout
+            // echo "<br><strong>Additional Details for Unit ID {$unit->id}:</strong><br>";
+            // echo "Original Price: {$unitProcessedData['price']}<br>";
+            // echo "Appreciation Rate: {$appreciationRate}<br>";
+            // echo "Mortgage Payments per Year: {$unitProcessedData['mortgage_payments_year']}<br>";
+            // echo "Holding Period: " . count($unitProcessedData['net_cash_flows']) . "<br>";
+            // $finalCashFlowIndex = count($unitProcessedData['net_cash_flows']) - 1;
+            // echo "Final Cash Flow: " . ($unitProcessedData['net_cash_flows'][$finalCashFlowIndex] ?? 'Data not available') . "<br>";
+
             break;
         }
     }
@@ -386,17 +414,18 @@ function condoapp_get_unit_card_html($unit) {
     }
 
     // Generate the unit card HTML
-    $output = '<div style="border: 1px solid #ddd; margin-bottom: 10px;">';
-    $output .= esc_html($unit->project) . ' | ' .
-                'Model ' . esc_html($unit->model) . ' | ' .
-                'Unit #' . esc_html($unit->unit_number) . ' | ' .
-                'Price: $' . esc_html(number_format($unit->price)) . ' | ' .
-                'Beds: ' . esc_html($unit->bedrooms) . ' | ' .
-                'Baths: ' . esc_html($unit->bathrooms) . ' | ' .
-                'Sqft: ' . esc_html($unit->interior_size) . ' | ' .
-                'Developer: ' . esc_html($unit->developer) . ' | ' .
-                'Deposit Date: ' . (isset($unit->deposit_date) ? esc_html($unit->deposit_date) : 'N/A') . ' | ' .
-                'XIRR: <span class="xirr-result">' . $xirrFormatted . '</span>';
+    $output = '<div class="unit-card" style="border: 1px solid #ddd; margin-bottom: 10px;" data-unit-id="' . esc_attr($unit->id) . '">';
+        $output .= esc_html($unit->project) . ' | ' .
+            // ... rest of the unit card details ...
+            'Model ' . esc_html($unit->model) . ' | ' .
+            'Unit #' . esc_html($unit->unit_number) . ' | ' .
+            'Price: $' . esc_html(number_format($unit->price)) . ' | ' .
+            'Beds: ' . esc_html($unit->bedrooms) . ' | ' .
+            'Baths: ' . esc_html($unit->bathrooms) . ' | ' .
+            'Sqft: ' . esc_html($unit->interior_size) . ' | ' .
+            'Developer: ' . esc_html($unit->developer) . ' | ' .
+            'Deposit Date: ' . (isset($unit->deposit_date) ? esc_html($unit->deposit_date) : 'N/A') . ' | ' .
+            'XIRR: <span class="xirr-result">' . $xirrFormatted . '</span>';
 
     // Add interactive elements in a container
     $output .= '<div class="unit-card-controls">';
@@ -420,6 +449,7 @@ function fetch_cashflow_data() {
             *
         FROM cashflows_20231120_v4 c
             left join (select id as unit_id, price from condo_app.pre_con_unit_database_20230827_v4) p on p.unit_id = c.id
+        order by id
     ";
 
     $results = $wpdb->get_results($query, ARRAY_A);
@@ -428,7 +458,10 @@ function fetch_cashflow_data() {
     return $results;
 }
 
-function process_and_calculate_cashflows($data, $holdingPeriod, $appreciationRate = 0.06, $rent = null) {
+function process_and_calculate_cashflows($data, $holdingPeriod, $appreciationRate = 0.06, $rent = null, $useUserInput = false) {
+
+    // echo "<pre>Initial values: Holding Period: $holdingPeriod, Rent: $rent, Appreciation Rate: $appreciationRate, User input: $useUserInput</pre>";
+
     foreach ($data as $key => $row) {
         // Decode JSON fields
         $data[$key]['deposits'] = json_decode($row['deposits'], true);
@@ -438,20 +471,11 @@ function process_and_calculate_cashflows($data, $holdingPeriod, $appreciationRat
         $data[$key]['rent'] = json_decode($row['rent'], true);
         $data[$key]['rent_expenses'] = json_decode($row['rent_expenses'], true);
         $data[$key]['rental_net_income'] = json_decode($row['rental_net_income'], true);
-        $holdingPeriod = $row['occupancy_index'] + 10;
 
-        foreach ($data[$key]['rent'] as $rentValue) {
-            if ($rentValue > 0) {
-                $rent = $rentValue;
-                break;
-            }
-        }
-
-        // Debugging: Print out the holding period for this unit
-        // echo "Project: {$row['project']}<br>";
-        // echo "Model: {$row['model']}<br>";
-        // echo "Unit: {$row['unit']}<br>";
-        // echo "Unit Key: {$key}, Holding Period: {$holdingPeriod}<br>";
+        // Local variables to hold values for each unit
+        $localHoldingPeriod = $useUserInput ? $holdingPeriod + 1 : ($row['occupancy_index'] + 1);
+        $localRent = $useUserInput && $rent !== null ? $rent : findFirstNonZeroRent($data[$key]['rent']);
+        $localAppreciationRate = $appreciationRate;
 
         // Calculate net cash flows
         $netCashFlows = [];
@@ -459,78 +483,38 @@ function process_and_calculate_cashflows($data, $holdingPeriod, $appreciationRat
         $selling_costs = $row['selling_costs']; // Assuming 'selling_costs' is a field in your data
         $mortgage_payments_year = $row['mortgage_payments_year']; // Assuming this is a field in your data
 
-        for ($i = 0; $i < $holdingPeriod; $i++) {
+        for ($i = 0; $i < $localHoldingPeriod; $i++) {
             $netCashFlow = -($data[$key]['deposits'][$i] ?? 0)
                           - ($data[$key]['closing_costs'][$i] ?? 0)
                           - ($data[$key]['mortgage_payment'][$i] ?? 0)
                           + ($data[$key]['rental_net_income'][$i] ?? 0);
             array_push($netCashFlows, $netCashFlow);
-
-            // Debugging output: Print each cash flow
-            // echo "Period {$i}: Net Cash Flow = {$netCashFlow}<br>";
         }
 
         // Calculate the sale price of the property at the end of the holding period
-        // =(1+D13)^(1/12)-1
-        $salePrice = $price * pow(pow(1 + $appreciationRate,(1 / $mortgage_payments_year) ), $holdingPeriod);
+        $salePrice = $price * pow(pow(1 + $appreciationRate,(1 / $mortgage_payments_year) ), $localHoldingPeriod);
 
         // Calculate the selling costs
         $sellingCosts = $salePrice * $selling_costs;
 
         // Calculate the amount remaining on the mortgage
-        $depositsSum = array_sum(array_slice($data[$key]['deposits'], 0, $holdingPeriod));
-        $principalSum = array_sum(array_slice($data[$key]['mortgage_principal'], 0, $holdingPeriod));
+        $depositsSum = array_sum(array_slice($data[$key]['deposits'], 0, $localHoldingPeriod));
+        $principalSum = array_sum(array_slice($data[$key]['mortgage_principal'], 0, $localHoldingPeriod));
         $mortgageRemaining = ($price - $depositsSum) - $principalSum;
 
         // Adjust the last cash flow
         $last_cashflow_addition = $salePrice - $sellingCosts - $mortgageRemaining;
-        $netCashFlows[$holdingPeriod - 1] += $last_cashflow_addition;
+        $netCashFlows[$localHoldingPeriod - 1] += $last_cashflow_addition;
 
-        // Debugging: Start the table
-        // echo "<table border='1'>";
-        // echo "<tr><th>Period</th><th>Deposits</th><th>Closing Costs</th><th>Mortgage Payment</th><th>Mortgage Principal</th><th>Rent</th><th>Rent Expenses</th><th>Rental Net Income</th><th>Total Net Cash Flow</th></tr>";
-
-        // for ($i = 0; $i < $holdingPeriod; $i++) {
-        //     // Print each cash flow in a table row
-        //     echo "<tr>";
-        //     echo "<td>{$i}</td>";
-        //     echo "<td>" . ($data[$key]['deposits'][$i] ?? 0) . "</td>";
-        //     echo "<td>" . ($data[$key]['closing_costs'][$i] ?? 0) . "</td>";
-        //     echo "<td>" . ($data[$key]['mortgage_payment'][$i] ?? 0) . "</td>";
-        //     echo "<td>" . ($data[$key]['mortgage_principal'][$i] ?? 0) . "</td>";
-        //     echo "<td>" . ($data[$key]['rent'][$i] ?? 0) . "</td>";
-        //     echo "<td>" . ($data[$key]['rent_expenses'][$i] ?? 0) . "</td>";
-        //     echo "<td>" . ($data[$key]['rental_net_income'][$i] ?? 0) . "</td>";
-        //     echo "<td>{$netCashFlows[$i]}</td>";
-        //     echo "</tr>";
-        // }
-
-        // // Debugging: Close the table and print additional data
-        // echo "</table>";
-        // echo "Original Price for Unit {$key}: {$price}<br>";
-        // echo "Appreciation rate for Unit {$key}: {$appreciationRate}<br>";
-        // echo "Mortgage payments per year for Unit {$key}: {$mortgage_payments_year}<br>";
-        // echo "Holding period for Unit {$key}: {$holdingPeriod}<br>";
-        // echo "Sale Price for Unit {$key}: {$salePrice}<br>";
-        // echo "Selling Costs for Unit {$key}: {$sellingCosts}<br>";
-        // echo "Mortgage Remaining for Unit {$key}: {$mortgageRemaining}<br>";
-        // echo "Final Cash Flow for Unit {$key}: {$netCashFlows[$holdingPeriod - 1]}<br>";
-        // echo "Total number of cash flows for Unit {$key}: " . count($netCashFlows) . "<br>";
-
-        // Debugging: Print the final cash flow
-        // echo "Final Cash Flow for Unit {$key}: {$netCashFlows[$holdingPeriod - 1]}<br>";
-
-        // Debugging: Print the total number of cash flows for this unit
-        // echo "Total number of cash flows for Unit {$key}: " . count($netCashFlows) . "<br>";
-
-        // Store the calculated net cash flows back into the data array
         $data[$key]['net_cash_flows'] = $netCashFlows;
+
     }
 
     return $data;
 }
 
 function calculateXIRR($netCashFlows, $correspondingDateStrings) {
+
     // Preprocess the date strings if they are not in proper JSON format
     $jsonFormattedDateStrings = preg_replace('/(\d{4}-\d{2}-\d{2})/', '"$1"', $correspondingDateStrings);
     $correspondingDatesArray = json_decode($jsonFormattedDateStrings, true);
@@ -571,14 +555,14 @@ function calculateXIRR($netCashFlows, $correspondingDateStrings) {
 }
 
 function recalculate_xirr_ajax_handler() {
-    echo 'AJAX handler triggered.';
+    // echo 'AJAX handler triggered.';
     // Check for nonce for security
     check_ajax_referer('condoapp_irr_nonce', 'nonce');
 
     // Echo received data for debugging
-    echo '<pre>Received Data: ';
-    print_r($_POST);
-    echo '</pre>';
+    // echo '<pre>Received Data: ';
+    // print_r($_POST);
+    // echo '</pre>';
 
     $unit_id = isset($_POST['unit_id']) ? intval($_POST['unit_id']) : 0;
     $holding_period = isset($_POST['holding_period']) ? intval($_POST['holding_period']) : null;
@@ -586,13 +570,15 @@ function recalculate_xirr_ajax_handler() {
     $appreciation_rate = isset($_POST['appreciation_rate']) ? floatval($_POST['appreciation_rate']) : 0.06;
 
     // Echo processed values for debugging
-    echo "<pre>Processed Data: Unit ID: $unit_id, Holding Period: $holding_period, Rent: $rent, Appreciation Rate: $appreciation_rate</pre>";
+    // echo "<pre>Processed Data: Unit ID: $unit_id, Holding Period: $holding_period, Rent: $rent, Appreciation Rate: $appreciation_rate</pre>";
 
     // Fetch all cash flow data
     $cashflowData = fetch_cashflow_data();
     // Process and calculate cash flows for the specific unit
 
-    $processedData = process_and_calculate_cashflows($cashflowData, $holding_period, $appreciation_rate, $rent);
+    // echo "<pre>Passing to function: Holding Period: $holding_period, Rent: $rent, Appreciation Rate: $appreciation_rate, User Input: true</pre>";
+
+    $processedData = process_and_calculate_cashflows($cashflowData, $holding_period, $appreciation_rate, $rent, true);
     
     // Echo processed cash flow data for debugging
     // echo '<pre>Processed Cash Flows: ';
@@ -613,11 +599,15 @@ function recalculate_xirr_ajax_handler() {
         wp_die();
     }
 
+    // echo "<pre>Cash Flows for Unit ID {$unit_id}: ";
+    // print_r($unitProcessedData['net_cash_flows']);
+    // echo "</pre>";
+
     // Calculate XIRR
     $xirrResult = calculateXIRR($unitProcessedData['net_cash_flows'], $unitProcessedData['corresponding_date']);
 
     // Echo XIRR calculation result for debugging
-    echo '<pre>XIRR Calculation Result: ' . $xirrResult . '</pre>';
+    // echo '<pre>XIRR Calculation Result: ' . $xirrResult . '</pre>';
     
     if (is_numeric($xirrResult)) {
         $xirrFormatted = number_format($xirrResult * 100, 2) . '%';
@@ -629,3 +619,12 @@ function recalculate_xirr_ajax_handler() {
 }
 add_action('wp_ajax_recalculate_xirr', 'recalculate_xirr_ajax_handler');
 add_action('wp_ajax_nopriv_recalculate_xirr', 'recalculate_xirr_ajax_handler');
+
+function findFirstNonZeroRent($rents) {
+    foreach ($rents as $rentValue) {
+        if ($rentValue > 0) {
+            return $rentValue;
+        }
+    }
+    return null; // Default to null if no non-zero rent found
+}

@@ -1,9 +1,12 @@
 jQuery(document).ready(function($) {
-    $('.calculate-xirr').click(function() {
+    // Event delegation for dynamically loaded content
+    $('#unit-cards').on('click', '.calculate-xirr', function() {
         var unitId = parseInt($(this).data('unit-id'));
-        var holdingPeriod = parseInt($(this).closest('div').find('.holding-period').val());
-        var rent = parseFloat($(this).closest('div').find('.rent').val());
-        var appreciationRate = parseFloat($(this).closest('div').find('.appreciation-rate').val());
+        var holdingPeriod = parseInt($(this).closest('.unit-card').find('.holding-period').val());
+        var rent = parseFloat($(this).closest('.unit-card').find('.rent').val());
+        var appreciationRate = parseFloat($(this).closest('.unit-card').find('.appreciation-rate').val());
+    
+        console.log('Recalculating XIRR for unit:', unitId);
     
         console.log('Sending data:', { unitId, holdingPeriod, rent, appreciationRate });    
     
@@ -18,16 +21,15 @@ jQuery(document).ready(function($) {
                 rent: rent,
                 appreciation_rate: appreciationRate
             },
-            // success: function(response) {
-            //     if (response.success) {
-            //         $('[data-unit-id="' + unitId + '"]').closest('.unit-card').find('.xirr-result').text(response.data.new_xirr);
-            //     } else {
-            //         alert('Error recalculating XIRR: ' + response.data);
-            //     }
-            // },            
-            // error: function(xhr, status, error) {
-            //     console.error('AJAX Error:', xhr.status, xhr.responseText);
-            // }
+            success: function(response) {
+                console.log('Success function triggered', response);
+                if (response.success) {
+                    // Find the .xirr-result element in the same unit card as the clicked button and update its text
+                    $('[data-unit-id="' + unitId + '"]').closest('.unit-card').find('.xirr-result').text(response.data.new_xirr);
+                } else {
+                    alert('Error recalculating XIRR: ' + (response.data || 'Unknown error'));
+                }
+            },            
         });
     });
 });
