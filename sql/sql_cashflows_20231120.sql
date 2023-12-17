@@ -1,13 +1,13 @@
 WITH RECURSIVE month_offset AS (
     SELECT 
         0 AS month_offset,
-        CURDATE() AS corresponding_date,
-        DATE_FORMAT(CURDATE(), '%M %Y') AS formatted_date
+        STR_TO_DATE(DATE_FORMAT(CURDATE(), '%Y-%m-01'), '%Y-%m-%d') AS corresponding_date,
+        DATE_FORMAT(STR_TO_DATE(DATE_FORMAT(CURDATE(), '%Y-%m-01'), '%Y-%m-%d'), '%M %Y') AS formatted_date
     UNION ALL
     SELECT 
         month_offset + 1,
-        DATE_ADD(CURDATE(), INTERVAL (month_offset + 1) MONTH) AS corresponding_date,
-        DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL (month_offset + 1) MONTH), '%M %Y') AS formatted_date
+        DATE_ADD(STR_TO_DATE(DATE_FORMAT(CURDATE(), '%Y-%m-01'), '%Y-%m-%d'), INTERVAL (month_offset + 1) MONTH) AS corresponding_date,
+        DATE_FORMAT(DATE_ADD(STR_TO_DATE(DATE_FORMAT(CURDATE(), '%Y-%m-01'), '%Y-%m-%d'), INTERVAL (month_offset + 1) MONTH), '%M %Y') AS formatted_date
     FROM month_offset
     WHERE month_offset < 500
 )
@@ -23,13 +23,10 @@ WITH RECURSIVE month_offset AS (
 		,bathrooms
 		,den
 		,interior_size
-	from condo_app.pre_con_unit_database_20230827_v4        
+	from wp_condoappdev.pre_con_unit_database_20230827_v4        
 	where true
 		-- and project = '75_James'
 )
-
-FROM NumberSeries;
-
 
 ,deposits_staging as (
 	SELECT
@@ -43,13 +40,13 @@ FROM NumberSeries;
         ,deposit_percent
         ,deposit_dollar
         ,round(deposit_date_t_plus_today / 30) as deposit_date_t_plus_today_months
-        ,TIMESTAMPDIFF(MONTH, current_date, deposit_date)
-        ,round(deposit_date_t_plus_today / 30) + coalesce(timestampdiff(MONTH, current_date, deposit_date),0) as month_offset
+        ,TIMESTAMPDIFF(MONTH, current_date, deposit_date) + 1
+        ,round(deposit_date_t_plus_today / 30) + coalesce(timestampdiff(MONTH, current_date, deposit_date) + 1,0) as month_offset
 		,price * deposit_percent + deposit_dollar as deposit
         ,case when deposit_occupancy = 'TRUE' then price * land_transfer_tax else 0 end as closing_costs
 	FROM units pc
-		LEFT JOIN condo_app.deposit_structure dp ON dp.project = pc.project
-		cross JOIN condo_app.default_values
+		LEFT JOIN wp_condoappdev.deposit_structure dp ON dp.project = pc.project
+		cross JOIN wp_condoappdev.default_values
 	where true
 		-- and pc.project = '75_James'
 	ORDER BY pc.project, model, price, cast(deposit_num as signed)
@@ -68,6 +65,9 @@ FROM NumberSeries;
     group by 1,2,3,4,5
 )
 
+-- select * from month_offset
+-- select * from deposits
+
 ,mortgage as (
 	SELECT distinct
 		pc.id
@@ -75,15 +75,15 @@ FROM NumberSeries;
 		,pc.model
 		,pc.unit
         ,pc.price
-		,round(deposit_date_t_plus_today / 30) + coalesce(timestampdiff(MONTH, current_date, deposit_date),0) as month_offset
+		,round(deposit_date_t_plus_today / 30) + coalesce(timestampdiff(MONTH, current_date, deposit_date) + 1,0) as month_offset
 		,deposit_num
 	    ,pc.price * (1 - downpayment_percent) as present_value
 	    ,(mortgage_rate/mortgage_payments_year) as rate
 	    ,mortgage_amortization_years * mortgage_payments_year as number_of_periods
 		,case when deposit_occupancy = 'TRUE' then round((price * (1-downpayment_percent) * (mortgage_rate/mortgage_payments_year) * POW(1 + (mortgage_rate/mortgage_payments_year), mortgage_amortization_years*mortgage_payments_year)) / (POW(1 + (mortgage_rate/mortgage_payments_year), mortgage_amortization_years*mortgage_payments_year) - 1)) else null end as mortgage_payment
 	FROM units pc
-		LEFT JOIN condo_app.deposit_structure dp ON dp.project = pc.project
-		cross JOIN condo_app.default_values
+		LEFT JOIN wp_condoappdev.deposit_structure dp ON dp.project = pc.project
+		cross JOIN wp_condoappdev.default_values
 	where true
 		and deposit_occupancy = 'TRUE'
 -- 		and pc.project in ('75_James','8_Elm')
@@ -104,8 +104,8 @@ FROM NumberSeries;
 		,ATAN2(SQRT(POW(COS(RADIANS(rd.lat)) * SIN(RADIANS(pll.lon - rd.lon)),2) + POW(COS(RADIANS(pll.lat)) * SIN(RADIANS(rd.lat)) - SIN(RADIANS(pll.lat)) * COS(RADIANS(rd.lat)) * COS(RADIANS(pll.lon - rd.lon)),2)),(SIN(RADIANS(pll.lat)) * SIN(RADIANS(rd.lat)) + COS(RADIANS(pll.lat)) * COS(RADIANS(rd.lat)) * COS(RADIANS(pll.lon - rd.lon)))) * 6372.795 as haversine
 		,row_number() over(partition by pc.project, model, unit order by ATAN2(SQRT(POW(COS(RADIANS(rd.lat)) * SIN(RADIANS(pll.lon - rd.lon)),2) + POW(COS(RADIANS(pll.lat)) * SIN(RADIANS(rd.lat)) - SIN(RADIANS(pll.lat)) * COS(RADIANS(rd.lat)) * COS(RADIANS(pll.lon - rd.lon)),2)),(SIN(RADIANS(pll.lat)) * SIN(RADIANS(rd.lat)) + COS(RADIANS(pll.lat)) * COS(RADIANS(rd.lat)) * COS(RADIANS(pll.lon - rd.lon)))) * 6372.795) as proximity_rank
 	from units pc
-		left join condo_app.pre_con_latlon_20230827 pll on pll.project = pc.project
-		join condo_app.rental_data_20231016 rd on rd.bedrooms_clean = pc.bedrooms
+		left join wp_condoappdev.pre_con_latlon_20230827 pll on pll.project = pc.project
+		join wp_condoappdev.rental_data_20231016 rd on rd.bedrooms_clean = pc.bedrooms
 	where true
 		-- and pc.project = '75_James'
 -- 		and unit = '913'
@@ -131,7 +131,7 @@ FROM NumberSeries;
 	    -- ,2500 as rent
 	from rents r
 		left join (select distinct project, month_offset from mortgage) pm on pm.project = r.project
-		cross join condo_app.default_values dv
+		cross join wp_condoappdev.default_values dv
 	where true
 		and proximity_rank <= 10
 	group by 1,2,3,4,5,6,7,8,9,10,11,12
@@ -185,7 +185,7 @@ FROM NumberSeries;
 -- group by 1,2,3,4,5,6
 -- having mortgage_month_offset is not null
 
--- INSERT INTO condo_app.cashflows_20231120_v1 (
+-- INSERT INTO wp_condoappdev.cashflows_20231120_v1 (
 --     id,
 --     project,
 --     model,
@@ -215,7 +215,7 @@ FROM NumberSeries;
 --     rental_net_income
 -- )
 
--- CREATE TABLE condo_app.cashflows_20231120_v2 (
+-- CREATE TABLE wp_condoappdev.cashflows_20231120_v2 (
 --     id INT PRIMARY KEY,
 --     project VARCHAR(255),
 --     model VARCHAR(255),
@@ -263,8 +263,8 @@ SELECT
     land_transfer_tax,
     occupancy_index,
     CONCAT('[', GROUP_CONCAT(month_offset ORDER BY month_offset), ']') AS months_from_today,
-	CONCAT('[', GROUP_CONCAT('\"', DATE_FORMAT(corresponding_date, '%Y-%m-%d'), '\"' ORDER BY month_offset), ']') AS corresponding_date,
-	CONCAT('[', GROUP_CONCAT('\"', formatted_date, '\"' ORDER BY month_offset), ']') AS formatted_date,
+    CONCAT('[', GROUP_CONCAT(DATE_FORMAT(corresponding_date, '%Y-%m-%d') ORDER BY month_offset), ']') AS corresponding_date,
+-- 	CONCAT('[', GROUP_CONCAT('\"', formatted_date, '\"' ORDER BY month_offset), ']') AS formatted_date,
     CONCAT('[', GROUP_CONCAT(deposit ORDER BY month_offset), ']') AS deposits,
     CONCAT('[', GROUP_CONCAT(closing_costs ORDER BY month_offset), ']') AS closing_costs,
     CONCAT('[', GROUP_CONCAT(month_since_occupancy ORDER BY month_offset), ']') AS months_from_occupancy,
@@ -276,6 +276,6 @@ SELECT
     CONCAT('[', GROUP_CONCAT(rental_net_income ORDER BY month_offset), ']') AS rental_net_income
 FROM cashflows c
     LEFT JOIN (SELECT id, project, model, unit, month_offset AS occupancy_index FROM mortgage) oi ON c.project = oi.project AND c.model = oi.model AND c.unit = oi.unit
-    CROSS JOIN condo_app.default_values dv
+    CROSS JOIN wp_condoappdev.default_values dv
 WHERE c.project != 'Seaton'
 GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15;

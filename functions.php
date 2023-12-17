@@ -160,19 +160,19 @@ function get_filtered_units_sql($filters = array(), $offset = 0, $limit = 10) {
     // Base SQL query
     $sql = "SELECT
                 *
-            FROM condo_app.pre_con_unit_database_20230827_v4 u
-                LEFT JOIN condo_app.pre_con_pdf_jpg_database_20230827 j ON j.pdf_link = u.floor_plan_link
+            FROM wp_condoappdev.pre_con_unit_database_20230827_v4 u
+                LEFT JOIN wp_condoappdev.pre_con_pdf_jpg_database_20230827 j ON j.pdf_link = u.floor_plan_link
                 LEFT JOIN (
                     select
                         project as project_dd
                         ,CASE WHEN deposit_date LIKE '%/%/%' THEN DATE_FORMAT(STR_TO_DATE(deposit_date, '%m/%d/%Y'), '%Y-%m-%d') ELSE deposit_date END AS deposit_date
-                    from condo_app.deposit_structure
+                    from wp_condoappdev.deposit_structure
                         where deposit_occupancy = 'TRUE') d ON d.project_dd = u.project
                 left join (
                     select
                         project as project_pd
                         ,ROUND(SUM(deposit_percent), 2) as pre_occupancy_deposit
-                    FROM condo_app.deposit_structure
+                    FROM wp_condoappdev.deposit_structure
                         WHERE deposit_occupancy = ''
                     GROUP BY project) pd on pd.project_pd = u.project";
     $where_clauses = array();
@@ -211,7 +211,7 @@ function get_filtered_units_sql($filters = array(), $offset = 0, $limit = 10) {
     }
 
     // Add LIMIT and OFFSET
-    $sql .= $wpdb->prepare(" LIMIT %d OFFSET %d", $limit, $offset);
+    $sql .= $wpdb->prepare(" ORDER BY u.id LIMIT %d OFFSET %d", $limit, $offset);
 
     // Execute the query
     $results = $wpdb->get_results($sql);
@@ -225,7 +225,7 @@ function get_distinct_values($column) {
     global $wpdb;
     $query = $wpdb->get_col("
         SELECT DISTINCT $column 
-        FROM condo_app.pre_con_unit_database_20230827_v4 u
+        FROM wp_condoappdev.pre_con_unit_database_20230827_v4 u
         WHERE $column IS NOT NULL
     ");
     return $query ?: []; // Return an empty array if the query fails
@@ -238,13 +238,13 @@ function get_min_max_values($column) {
         SELECT
             MIN($column) as min_value
             ,MAX($column) as max_value 
-        FROM condo_app.pre_con_unit_database_20230827_v4 u
-            LEFT JOIN condo_app.pre_con_pdf_jpg_database_20230827 j ON j.pdf_link = u.floor_plan_link
+        FROM wp_condoappdev.pre_con_unit_database_20230827_v4 u
+            LEFT JOIN wp_condoappdev.pre_con_pdf_jpg_database_20230827 j ON j.pdf_link = u.floor_plan_link
             LEFT JOIN (
                 select
                     project as project_dd
                     ,CASE WHEN deposit_date LIKE '%/%/%' THEN DATE_FORMAT(STR_TO_DATE(deposit_date, '%m/%d/%Y'), '%Y-%m-%d') ELSE deposit_date END AS deposit_date
-                from condo_app.deposit_structure
+                from wp_condoappdev.deposit_structure
                 where deposit_occupancy = 'TRUE') d ON d.project_dd = u.project"
     );
     return $query ?: ['min_value' => null, 'max_value' => null];
@@ -256,7 +256,7 @@ function get_pre_occupancy_deposits() {
     $query = "
         SELECT DISTINCT
             ROUND(SUM(deposit_percent), 2) as pre_occupancy_deposit
-        FROM condo_app.deposit_structure
+        FROM wp_condoappdev.deposit_structure
         WHERE deposit_occupancy = ''
         GROUP BY project
     ";
@@ -405,6 +405,10 @@ function condoapp_get_unit_card_html($unit) {
     // Calculate XIRR
     $xirrResult = calculateXIRR($unitProcessedData['net_cash_flows'], $unitProcessedData['corresponding_date']);
 
+    // echo esc_html($unit->project) . " | " . 
+    // esc_html($unit->model) . " | " . 
+    // esc_html($unit->unit_number) . "<br>";
+     
     if (is_numeric($xirrResult)) {
         // It's a number, so format it as a percentage
         $xirrFormatted = esc_html(number_format($xirrResult * 100, 2)) . '%';
@@ -447,8 +451,8 @@ function fetch_cashflow_data() {
     $query = "
         SELECT 
             *
-        FROM cashflows_20231120_v4 c
-            left join (select id as unit_id, price from condo_app.pre_con_unit_database_20230827_v4) p on p.unit_id = c.id
+        FROM wp_condoappdev.cashflows_20231120_v4 c
+            left join (select id as unit_id, price from wp_condoappdev.pre_con_unit_database_20230827_v4) p on p.unit_id = c.id
         order by id
     ";
 
@@ -471,12 +475,31 @@ function process_and_calculate_cashflows($data, $holdingPeriod, $appreciationRat
         $data[$key]['rent'] = json_decode($row['rent'], true);
         $data[$key]['rent_expenses'] = json_decode($row['rent_expenses'], true);
         $data[$key]['rental_net_income'] = json_decode($row['rental_net_income'], true);
+    
+        if ($useUserInput && $rent !== null) {
+            // Overwrite rent array based on user input
+            $monthlyAppreciationFactor = pow(1 + 0.03, 1/12) - 1;
+            $occupancyIndex = $row['occupancy_index'];
+            for ($i = 0; $i < count($data[$key]['rent']); $i++) {
+                if ($i < $occupancyIndex) {
+                    $data[$key]['rent'][$i] = 0;
+                } elseif ($i == $occupancyIndex) {
+                    $data[$key]['rent'][$i] = $rent;
+                } else {
+                    $data[$key]['rent'][$i] = $data[$key]['rent'][$i - 1] * (1 + $monthlyAppreciationFactor);
+                }
+            }
 
+            // Recalculate rental net income
+            for ($i = 0; $i < count($data[$key]['rent']); $i++) {
+                $data[$key]['rental_net_income'][$i] = $data[$key]['rent'][$i] - $data[$key]['rent_expenses'][$i];
+            }
+        }
+        
         // Local variables to hold values for each unit
         $localHoldingPeriod = $useUserInput ? $holdingPeriod + 1 : ($row['occupancy_index'] + 1);
-        $localRent = $useUserInput && $rent !== null ? $rent : findFirstNonZeroRent($data[$key]['rent']);
         $localAppreciationRate = $appreciationRate;
-
+    
         // Calculate net cash flows
         $netCashFlows = [];
         $price = $row['price']; // Assuming 'price' is a field in your data
@@ -492,7 +515,7 @@ function process_and_calculate_cashflows($data, $holdingPeriod, $appreciationRat
         }
 
         // Calculate the sale price of the property at the end of the holding period
-        $salePrice = $price * pow(pow(1 + $appreciationRate,(1 / $mortgage_payments_year) ), $localHoldingPeriod);
+        $salePrice = $price * pow(pow(1 + $appreciationRate,(1 / $mortgage_payments_year) ), $localHoldingPeriod - 1);
 
         // Calculate the selling costs
         $sellingCosts = $salePrice * $selling_costs;
@@ -505,6 +528,8 @@ function process_and_calculate_cashflows($data, $holdingPeriod, $appreciationRat
         // Adjust the last cash flow
         $last_cashflow_addition = $salePrice - $sellingCosts - $mortgageRemaining;
         $netCashFlows[$localHoldingPeriod - 1] += $last_cashflow_addition;
+
+        // echo "<pre>Net cashflows: "; print_r($netCashFlows); echo "</pre>";
 
         $data[$key]['net_cash_flows'] = $netCashFlows;
 
@@ -619,12 +644,3 @@ function recalculate_xirr_ajax_handler() {
 }
 add_action('wp_ajax_recalculate_xirr', 'recalculate_xirr_ajax_handler');
 add_action('wp_ajax_nopriv_recalculate_xirr', 'recalculate_xirr_ajax_handler');
-
-function findFirstNonZeroRent($rents) {
-    foreach ($rents as $rentValue) {
-        if ($rentValue > 0) {
-            return $rentValue;
-        }
-    }
-    return null; // Default to null if no non-zero rent found
-}
