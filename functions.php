@@ -624,6 +624,16 @@ function recalculate_xirr_ajax_handler() {
         wp_die();
     }
 
+    // Debug: Print keys (headers) of unitProcessedData array
+    // if (is_array($unitProcessedData) && !empty($unitProcessedData)) {
+    //     echo "Available keys in unitProcessedData:\n";
+    //     echo "<pre>" . implode(", ", array_keys($unitProcessedData)) . "</pre>";
+    // } else {
+    //     echo "unitProcessedData is empty or not an array.";
+    // }
+
+    log_cash_flows($unitProcessedData);
+
     // echo "<pre>Cash Flows for Unit ID {$unit_id}: ";
     // print_r($unitProcessedData['net_cash_flows']);
     // echo "</pre>";
@@ -644,3 +654,60 @@ function recalculate_xirr_ajax_handler() {
 }
 add_action('wp_ajax_recalculate_xirr', 'recalculate_xirr_ajax_handler');
 add_action('wp_ajax_nopriv_recalculate_xirr', 'recalculate_xirr_ajax_handler');
+
+function log_cash_flows($unitProcessedData) {
+    // $themeDirectory = get_template_directory(); // Gets the directory of the current theme
+    // $logDirectory = $themeDirectory . '/logs'; // Path to the logs directory
+    // $logFile = $logDirectory . '/cashflow_log.csv'; // Path to your log file
+    
+    // echo '<pre>unitProcessedData: ';
+    // print_r($unitProcessedData);
+    // echo '</pre>';
+
+    // Hardcoded file path
+    $logFile = '/Applications/XAMPP/xamppfiles/htdocs/condoapp/wordpress/wp-content/themes/condoapptheme/logs/cashflow_log.csv';
+
+    // Open the file for writing
+    $fileHandle = fopen($logFile, 'a');
+    if (!$fileHandle) {
+        echo "Failed to open log file for writing";
+        return;
+    }
+
+    // Determine the maximum index in the 'net_cash_flows' array
+    $maxIndex = count($unitProcessedData['net_cash_flows']) - 1;
+
+    // Current timestamp for logging
+    $timestamp = date('Y-m-d H:i:s');
+
+    // Loop through the arrays up to maxIndex and log each entry
+    for ($i = 0; $i <= $maxIndex; $i++) {
+        $dataToLog = [
+            'Timestamp' => $timestamp,
+            'Project' => $unitProcessedData['project'] ?? 'N/A',
+            'Model' => $unitProcessedData['model'] ?? 'N/A',
+            'Unit' => $unitProcessedData['unit'] ?? 'N/A',
+            'Deposit' => $unitProcessedData['deposits'][$i] ?? 'N/A',
+            'Closing Cost' => $unitProcessedData['closing_costs'][$i] ?? 'N/A',
+            'Mortgage Payment' => $unitProcessedData['mortgage_payment'][$i] ?? 'N/A',
+            'Mortgage Principal' => $unitProcessedData['mortgage_principal'][$i] ?? 'N/A',
+            'Mortgage Interest' => $unitProcessedData['mortgage_interest'][$i] ?? 'N/A',
+            'Rent' => $unitProcessedData['rent'][$i] ?? 'N/A',
+            'Rent Expense' => $unitProcessedData['rent_expenses'][$i] ?? 'N/A',
+            'Rental Net Income' => $unitProcessedData['rental_net_income'][$i] ?? 'N/A',
+            'Net Cash Flow' => $unitProcessedData['net_cash_flows'][$i] ?? 'N/A',
+            'Corresponding Date' => trim($unitProcessedData['corresponding_date'][$i], "[]") ?? 'N/A'
+        ];
+
+        // Check if file is empty to write headers
+        if (filesize($logFile) == 0) {
+            fputcsv($fileHandle, array_keys($dataToLog));
+        }
+
+        // Write data to CSV
+        fputcsv($fileHandle, $dataToLog);
+    }
+
+    // Close the file
+    fclose($fileHandle);
+}
