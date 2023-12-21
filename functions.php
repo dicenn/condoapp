@@ -23,7 +23,7 @@ function condoapptheme_enqueue_styles_scripts() {
     wp_enqueue_style('condoapptheme-style', get_stylesheet_uri());
     
     // Enqueue Bootstrap JS and Popper.js
-    wp_enqueue_script('bootstrap-js', 'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js', ['jquery'], null, true);
+    wp_enqueue_script('bootstrap-js', 'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.bundle.min.js', array('jquery'), null, true);
 }
 add_action('wp_enqueue_scripts', 'condoapptheme_enqueue_styles_scripts');
 
@@ -656,15 +656,6 @@ add_action('wp_ajax_recalculate_xirr', 'recalculate_xirr_ajax_handler');
 add_action('wp_ajax_nopriv_recalculate_xirr', 'recalculate_xirr_ajax_handler');
 
 function log_cash_flows($unitProcessedData) {
-    // $themeDirectory = get_template_directory(); // Gets the directory of the current theme
-    // $logDirectory = $themeDirectory . '/logs'; // Path to the logs directory
-    // $logFile = $logDirectory . '/cashflow_log.csv'; // Path to your log file
-    
-    // echo '<pre>unitProcessedData: ';
-    // print_r($unitProcessedData);
-    // echo '</pre>';
-
-    // Hardcoded file path
     $logFile = '/Applications/XAMPP/xamppfiles/htdocs/condoapp/wordpress/wp-content/themes/condoapptheme/logs/cashflow_log.csv';
 
     // Open the file for writing
@@ -680,34 +671,56 @@ function log_cash_flows($unitProcessedData) {
     // Current timestamp for logging
     $timestamp = date('Y-m-d H:i:s');
 
-    // Loop through the arrays up to maxIndex and log each entry
-    for ($i = 0; $i <= $maxIndex; $i++) {
-        $dataToLog = [
-            'Timestamp' => $timestamp,
-            'Project' => $unitProcessedData['project'] ?? 'N/A',
-            'Model' => $unitProcessedData['model'] ?? 'N/A',
-            'Unit' => $unitProcessedData['unit'] ?? 'N/A',
-            'Deposit' => $unitProcessedData['deposits'][$i] ?? 'N/A',
-            'Closing Cost' => $unitProcessedData['closing_costs'][$i] ?? 'N/A',
-            'Mortgage Payment' => $unitProcessedData['mortgage_payment'][$i] ?? 'N/A',
-            'Mortgage Principal' => $unitProcessedData['mortgage_principal'][$i] ?? 'N/A',
-            'Mortgage Interest' => $unitProcessedData['mortgage_interest'][$i] ?? 'N/A',
-            'Rent' => $unitProcessedData['rent'][$i] ?? 'N/A',
-            'Rent Expense' => $unitProcessedData['rent_expenses'][$i] ?? 'N/A',
-            'Rental Net Income' => $unitProcessedData['rental_net_income'][$i] ?? 'N/A',
-            'Net Cash Flow' => $unitProcessedData['net_cash_flows'][$i] ?? 'N/A',
-            'Corresponding Date' => trim($unitProcessedData['corresponding_date'][$i], "[]") ?? 'N/A'
-        ];
-
-        // Check if file is empty to write headers
-        if (filesize($logFile) == 0) {
-            fputcsv($fileHandle, array_keys($dataToLog));
+    // Function to ensure data is treated as an array
+    $ensureArray = function($data) {
+        if (is_string($data)) {
+            // Attempt to convert string to array, assuming JSON format
+            $decoded = json_decode($data, true);
+            return is_array($decoded) ? $decoded : [];
         }
+        return is_array($data) ? $data : [];
+    };
 
-        // Write data to CSV
-        fputcsv($fileHandle, $dataToLog);
+    // Ensure 'mortgage_interest' is treated as an array
+    $mortgageInterestArray = $ensureArray($unitProcessedData['mortgage_interest']);
+
+    // Function to convert date string into an array
+    $parseDateArray = function($dateString) {
+        $trimmedString = trim($dateString, "[]");
+        return explode(',', $trimmedString);
+    };
+
+    // Convert the 'corresponding_date' string into an array
+    $correspondingDateArray = $parseDateArray($unitProcessedData['corresponding_date']);
+
+    // Check if file is empty to write headers
+    if (filesize($logFile) == 0) {
+        $headers = ['Timestamp', 'Project', 'Model', 'Unit', 'Price', 'Cashflow index', 'Deposit', 'Closing Cost', 'Mortgage Payment', 'Mortgage Principal', 'Mortgage Interest', 'Rent', 'Rent Expense', 'Rental Net Income', 'Net Cash Flow', 'Corresponding Date'];
+        fputcsv($fileHandle, $headers);
     }
 
-    // Close the file
+    // Loop through the arrays up to maxIndex and log each entry
+    for ($i = 0; $i <= $maxIndex; $i++) {
+        $row = [
+            $timestamp,
+            $unitProcessedData['project'] ?? 'N/A',
+            $unitProcessedData['model'] ?? 'N/A',
+            $unitProcessedData['unit'] ?? 'N/A',
+            $unitProcessedData['price'] ?? 'N/A',
+            $i ?? 'N/A',
+            $unitProcessedData['deposits'][$i] ?? 0,
+            $unitProcessedData['closing_costs'][$i] ?? 0,
+            $unitProcessedData['mortgage_payment'][$i] ?? 0,
+            $unitProcessedData['mortgage_principal'][$i] ?? 0,
+            $mortgageInterestArray[$i] ?? 0,
+            $unitProcessedData['rent'][$i] ?? 0,
+            $unitProcessedData['rent_expenses'][$i] ?? 0,
+            $unitProcessedData['rental_net_income'][$i] ?? 0,
+            $unitProcessedData['net_cash_flows'][$i] ?? 0,
+            $correspondingDateArray[$i] ?? 'N/A'
+        ];
+        fputcsv($fileHandle, $row);
+    }
+
     fclose($fileHandle);
 }

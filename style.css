@@ -10,6 +10,10 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: condoapptheme
 */
 
+#main {
+    padding-top: 100px; /* Adjust this value to match the height of your header bar */
+}
+
 .image-header {
     background-color: #f8f9fa; /* Light gray background, adjust the color as needed */
     padding: 10px;
