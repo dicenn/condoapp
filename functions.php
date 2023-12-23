@@ -31,8 +31,9 @@ function condoapp_enqueue_scripts() {
     // Enqueue the existing AJAX script
     wp_register_script('condoapp-ajax', get_template_directory_uri() . '/condoapp-ajax.js', array('jquery'), null, true);
     wp_localize_script('condoapp-ajax', 'condoapp_ajax', array(
-        'ajax_url' => admin_url('admin-ajax.php'),
-        'nonce'    => wp_create_nonce('condoapp_nonce') // General nonce for all AJAX actions
+        'ajax_url'    => admin_url('admin-ajax.php'), // URL for AJAX requests
+        'post_url'    => admin_url('admin-post.php'), // URL for form submissions via admin-post.php
+        'nonce'       => wp_create_nonce('condoapp_nonce') // General nonce for all AJAX actions
     ));
     wp_enqueue_script('condoapp-ajax');
 
@@ -632,7 +633,7 @@ function recalculate_xirr_ajax_handler() {
     //     echo "unitProcessedData is empty or not an array.";
     // }
 
-    log_cash_flows($unitProcessedData);
+    // log_cash_flows($unitProcessedData);
 
     // echo "<pre>Cash Flows for Unit ID {$unit_id}: ";
     // print_r($unitProcessedData['net_cash_flows']);
@@ -724,3 +725,35 @@ function log_cash_flows($unitProcessedData) {
 
     fclose($fileHandle);
 }
+
+function handle_agent_contact_form() {
+    global $wpdb;
+
+    if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['action']) && $_POST['action'] == 'submit_agent_form') {
+        // Verify the nonce for security
+        if (!isset($_POST['_wpnonce']) || !wp_verify_nonce($_POST['_wpnonce'], 'condoapp_nonce')) {
+            echo "Nonce verification failed!";
+            return;
+        }
+
+        $name = sanitize_text_field($_POST['name']);
+        $email = sanitize_email($_POST['email']);
+        $phone = sanitize_text_field($_POST['phone']);
+
+        $table_name = 'sign_ups';
+
+        $inserted = $wpdb->insert(
+            $table_name,
+            array('name' => $name, 'email' => $email, 'phone' => $phone),
+            array('%s', '%s', '%s')
+        );
+
+        if ($inserted === false) {
+            echo json_encode(array('success' => false, 'message' => $wpdb->last_error));
+        } else {
+            echo json_encode(array('success' => true, 'message' => 'Data inserted successfully.'));
+        }        
+        exit;
+    }
+}
+add_action('init', 'handle_agent_contact_form');
