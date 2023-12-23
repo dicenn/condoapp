@@ -10,6 +10,10 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Text Domain: condoapptheme
 */
 
+#main {
+    padding-top: 100px;
+}
+
 .image-header {
     background-color: #f8f9fa; /* Light gray background, adjust the color as needed */
     padding: 10px;
@@ -69,4 +73,64 @@ Text Domain: condoapptheme
     text-decoration: none;
     color: #333;
     font-weight: bold;
+}
+
+/* Style for the toggle button */
+#toggleButton {
+    padding: 10px 20px;
+    background-color: #007bff; /* Bootstrap primary color for consistency */
+    color: white;
+    border: none;
+    cursor: pointer;
+    position: fixed;
+    top: 150px; /* Adjust this value based on the actual height of your header */
+    left: 0; /* Positioned on the left side */
+    transform: translateY(-50%); /* Adjust for vertical centering */
+    border-radius: 0 5px 5px 0; /* Rounded corners on the right side */
+    z-index: 2; /* Ensures the button is above other content */
+    transition: left 0.5s ease-in-out; /* This should match the panel's transition time */
+  }  
+  
+  /* Style for the side panel */
+.sidepanel {
+    height: 100%;
+    width: 250px; /* Fixed width */
+    position: fixed;
+    z-index: 1;
+    top: 85px; /* Same as the button's top position */
+    left: 0;
+    background-color: #f8f9fa; /* Light gray background */
+    overflow-x: hidden;
+    transition: transform 0.5s ease-in-out;
+    transform: translateX(-100%); /* Start off-screen */
+  }  
+
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.4);
+}
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+}
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+.close:hover, .close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
 }

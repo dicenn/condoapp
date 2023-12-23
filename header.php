@@ -20,9 +20,12 @@
                 <a href="#about-us">About Us</a>
                 <a href="#sign-up">Sign Up</a>
                 <a href="#blog">Blog</a>
-                <a href="#contact">Speak to an Agent</a>
+                <button id="speakToAgentButton">Speak to an Agent</button>
             </div>
         </div>
+
+        <?php include 'speak_agent.php'; ?>
+
     </header>
 
     <div id="content" class="site-content">

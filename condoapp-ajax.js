@@ -1,3 +1,66 @@
+document.addEventListener('DOMContentLoaded', function() {
+    // Modal handling code
+    var modal = document.getElementById("agentModal");
+    var btn = document.getElementById("speakToAgentButton");
+    var span = document.getElementById("closeModal");
+
+    if (btn && modal) {
+        btn.onclick = function() {
+            modal.style.display = "block";
+        };
+    }
+
+    if (span) {
+        span.onclick = function() {
+            modal.style.display = "none";
+        };
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    };
+
+    // Form submission handling with AJAX
+    var form = document.getElementById('agentContactForm');
+    var messageElement = document.getElementById('formSubmissionMessage');
+
+    if (form && messageElement) {
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            var formData = new FormData(this);
+            formData.append('_wpnonce', condoapp_ajax.nonce); // Add nonce to the form data
+
+            // AJAX request to admin-post.php
+            fetch(condoapp_ajax.post_url, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => {
+                // console.log(data); // You can see the response here
+                messageElement.innerText = 'Thanks for submitting. We will contact you soon.';
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    }
+});
+
+function toggleNav() {
+    var sidepanel = document.getElementById("mySidepanel");
+    var toggleButton = document.getElementById("toggleButton");
+
+    if (sidepanel.style.transform === "translateX(0px)") {
+        sidepanel.style.transform = "translateX(-100%)"; // Move panel out of view
+        toggleButton.style.left = '0'; // Move button to its original position
+    } else {
+        sidepanel.style.transform = "translateX(0px)"; // Move panel into view
+        toggleButton.style.left = '250px'; // Move button to the right by the width of the panel
+    }
+}
+
 // console.log('condoapp-ajax.js is loaded');
 
 // Define currentFilters in the global scope
