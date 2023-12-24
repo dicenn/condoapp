@@ -52,6 +52,10 @@ get_header(); ?>
                 echo condoapp_get_unit_card_html($unit);
             }
             ?>
+            <!-- Container for the loading spinner -->
+            <div id="spinner-container" style="text-align: center; display: none;">
+                <img src="<?php echo get_template_directory_uri(); ?>/assets/loading_spinner.gif" alt="Loading..." style="width: 5%;">
+            </div>
         </section>
     </main><!-- #main -->
 </div><!-- #primary -->

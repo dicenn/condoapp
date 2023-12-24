@@ -176,6 +176,9 @@ jQuery(document).ready(function($) {
     }
     
     function filterUnits() {
+        var spinnerContainer = $('#spinner-container').detach(); // Detach the spinner container
+        spinnerContainer.show(); // Show spinner
+    
         $.ajax({
             url: condoapp_ajax.ajax_url,
             type: 'POST',
@@ -186,14 +189,20 @@ jQuery(document).ready(function($) {
                 offset: window.offset
             },
             success: function(response) {
-                $('#unit-cards').html(response);
-                window.offset = 10;
+                $('#unit-cards').html(response); // Replace the content in unit-cards
+                $('#unit-cards').append(spinnerContainer); // Reattach the spinner container
+                spinnerContainer.hide(); // Hide spinner on error
+                window.offset = 10; // Update offset for next load
             },
             error: function(error) {
                 console.error('Error:', error);
+                spinnerContainer.hide(); // Hide spinner on error
+            },
+            complete: function() {
+                // Optionally, hide spinner here if needed
             }
         });
-    }
+    }    
 
     // Initialize sliders
     initializeNumericSlider("#price-range", condoapp_filter_data, 'price_range', 50000, ",");

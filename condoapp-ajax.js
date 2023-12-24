@@ -1,3 +1,4 @@
+// event listener for the 'speak to an agent' form
 document.addEventListener('DOMContentLoaded', function() {
     // Modal handling code
     var modal = document.getElementById("agentModal");
@@ -48,6 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// toggle that expands and contracts the side filter panel
 function toggleNav() {
     var sidepanel = document.getElementById("mySidepanel");
     var toggleButton = document.getElementById("toggleButton");
@@ -154,8 +156,9 @@ jQuery(document).ready(function($) {
         console.log('Scrolled');
         if ($(window).scrollTop() + $(window).height() > $(document).height() - 100 && !loading) {
             loading = true;
-            
-            console.log("Load more units AJAX call triggered with offset:", window.offset);
+
+            $('#spinner-container').show();
+            console.log('Sending AJAX request...');
 
             $.ajax({
                 type: 'POST',
@@ -167,30 +170,46 @@ jQuery(document).ready(function($) {
                     offset: window.offset
                 },
                 beforeSend: function() {
-                    // console.log('Sending AJAX request...');
+                    
                 },
                 success: function(response) {
-                    // Extract SQL debug comment
+                    // Append new unit cards
+                    $('#unit-cards').append(response.replace(/<!--.*?-->/g, '')); // Remove debug comments and append new content
+                
+                    // Move spinner to the end of the content
+                    $('#unit-cards').append($('#spinner-container'));
+                
+                    // Extract SQL debug comment for logging, if necessary
                     let debugSql = response.match(/<!-- SQL Debug: (.*) -->/);
                     if (debugSql && debugSql[1]) {
                         console.log("SQL Query:", debugSql[1]);
                     } else {
                         console.log("SQL Query not found in response");
                     }
-                    
-                    // Process the rest of the response
+                
+                    // Hide loading indicator
+                    $('#spinner-container').hide();
+                
+                    // Check if more content was loaded
                     if (response.trim() !== '') {
-                        $('#unit-cards').append(response.replace(/<!--.*?-->/g, '')); // Remove debug comments from HTML
                         window.offset += 10; // Increment offset for next load
                     } else {
                         console.log("No more units to load.");
                     }
+                
+                    // Reset the loading flag
                     loading = false;
                     console.log("New offset:", window.offset);
-                },                
+                },                            
                 error: function(jqXHR, textStatus, errorThrown) {
+                    // Hide loading indicator
+                    $('#spinner-container').hide();
                     console.log('AJAX request failed:', textStatus, errorThrown);
                     loading = false;
+                },
+                complete: function() {
+                    // Ensure the loading indicator is hidden after the request completes
+                    $('#spinner-container').hide();
                 }
             });
         }
