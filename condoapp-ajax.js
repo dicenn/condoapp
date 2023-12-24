@@ -49,6 +49,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// hamburger menu event listener
+document.querySelector('.hamburger-menu-button').addEventListener('click', function() {
+    document.querySelector('.hamburger-menu-content').classList.toggle('open');
+});
+
 // toggle that expands and contracts the side filter panel
 function toggleNav() {
     var sidepanel = document.getElementById("mySidepanel");

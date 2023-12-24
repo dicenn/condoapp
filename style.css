@@ -148,3 +148,77 @@ Text Domain: condoapptheme
     width: 50%; /* Resize the spinner image */
     height: auto; /* Maintain aspect ratio */
 }
+
+
+/* Hamburger Menu Button */
+.hamburger-menu-button {
+    cursor: pointer;
+    background: transparent;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 30px;
+    height: 25px;
+}
+
+.hamburger-menu-button span {
+    display: block;
+    width: 100%;
+    height: 3px;
+    background-color: #333;
+}
+
+/* Hamburger Menu Content */
+.hamburger-menu-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: #fff;
+    /* Additional styling for the dropdown */
+}
+
+.hamburger-menu-content.open {
+    display: block;
+}
+
+.hamburger-menu-content a {
+    display: block;
+    padding: 10px;
+    color: #333;
+    text-decoration: none;
+    /* Additional link styles */
+}
+
+/* Speak to Agent Button Styling */
+#speakToAgentButton {
+    background-color: #007bff; /* Adjust as needed */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    text-align: center;
+    margin-right: 20px; /* Space between button and hamburger menu */
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .header-logo img {
+        height: 50px; /* Adjust for smaller screens */
+    }
+
+    .header-navigation a, #speakToAgentButton {
+        display: none; /* Hide on smaller screens, as they'll be in the hamburger menu */
+    }
+
+    .hamburger-menu-button {
+        display: flex; /* Show the hamburger menu on smaller screens */
+    }
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+}

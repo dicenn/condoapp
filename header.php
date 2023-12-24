@@ -5,10 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="profile" href="http://gmpg.org/xfn/11">
     <?php wp_head(); ?>
-    <!-- prevent browser stack loading the site from cache on mobile -->
-    <!-- <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Expires" content="0"> -->
 </head>
 
 <body <?php body_class(); ?>>
@@ -20,17 +16,28 @@
                 </a>
             </div>
 
-            <div class="header-navigation">
-                <a href="#about-us">About Us</a>
-                <a href="#sign-up">Sign Up</a>
-                <a href="#blog">Blog</a>
+
+            <div class="header-right">
                 <button id="speakToAgentButton">Speak to an Agent</button>
+
+                <!-- Hamburger Menu Button -->
+                <button class="hamburger-menu-button">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
             </div>
         </div>
 
-        <?php include 'speak_agent.php'; ?>
+        <!-- Menu Items Container (Initially Hidden) -->
+        <div class="hamburger-menu-content">
+            <a href="#about-us">About Us</a>
+            <a href="#sign-up">Sign Up</a>
+            <a href="#blog">Blog</a>
+            <!-- Add more links as needed -->
+        </div>
 
+        <?php include 'speak_agent.php'; ?>
     </header>
 
     <div id="content" class="site-content">
-        <!-- Page content goes here -->
