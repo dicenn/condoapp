@@ -37,6 +37,7 @@ get_header(); ?>
                     <label for="den-filter"># of Dens</label>
                     <select id="den-filter" multiple="multiple"></select>
 
+                    <button id="apply-filters-btn" class="btn btn-primary">Apply Filters</button>
                     <button id="clear-filters-btn" class="btn btn-secondary">Clear Filters</button>
                 </div>
             </aside>

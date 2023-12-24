@@ -48,6 +48,11 @@ jQuery(document).ready(function($) {
         filterUnits();
     });
 
+    $('#apply-filters-btn').click(function() {
+        window.offset = 0; // Reset offset for filtered results
+        filterUnits(); // Now call filterUnits
+    });
+    
     function resetDropdown(dropdownId) {
         $(dropdownId).multiselect('deselectAll', false);
         $(dropdownId).multiselect('updateButtonText');
@@ -79,8 +84,8 @@ jQuery(document).ready(function($) {
                 onFinish: function(data) {
                     window.currentFilters[filterKey].min = data.from;
                     window.currentFilters[filterKey].max = data.to;
-                    window.offset = 0;
-                    filterUnits();
+                    // window.offset = 0; //needed previously when filters were triggered on any modification, commented out when moved 'filter' button
+                    // filterUnits(); //needed previously when filters were triggered on any modification, commented out when moved 'filter' button
                 }
             });
         } else {
@@ -121,8 +126,8 @@ jQuery(document).ready(function($) {
     
                     window.currentFilters[filterKey].min = fromDate.toISOString().split('T')[0];
                     window.currentFilters[filterKey].max = toDate.toISOString().split('T')[0];
-                    window.offset = 0;
-                    filterUnits();
+                    // window.offset = 0; //needed previously when filters were triggered on any modification, commented out when moved 'filter' button
+                    // filterUnits(); //needed previously when filters were triggered on any modification, commented out when moved 'filter' button
                 }
             });
         } else {
@@ -170,8 +175,8 @@ jQuery(document).ready(function($) {
             allSelectedText: 'All Selected'
         }).change(function() {
             window.currentFilters[filterDataKey] = $(this).val();
-            window.offset = 0;
-            filterUnits();
+            // window.offset = 0; //needed previously when filters were triggered on any modification, commented out when moved 'filter' button
+            // filterUnits(); //needed previously when filters were triggered on any modification, commented out when moved 'filter' button
         });
     }
     
