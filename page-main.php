@@ -57,6 +57,11 @@ get_header(); ?>
             <div id="spinner-container" style="text-align: center; display: none;">
                 <img src="<?php echo get_template_directory_uri(); ?>/assets/loading_spinner.gif" alt="Loading..." style="width: 5%;">
             </div>
+
+            <!-- Container for the "No more units" message -->
+            <div id="no-more-units-message" style="text-align: center; display: none;">
+                <p>No more units to show</p>
+            </div>
         </section>
     </main><!-- #main -->
 </div><!-- #primary -->

@@ -159,7 +159,7 @@ jQuery(document).ready(function($) {
 
     $(window).scroll(function() {
         console.log('Scrolled');
-        if ($(window).scrollTop() + $(window).height() > $(document).height() - 100 && !loading) {
+        if ($(window).scrollTop() + $(window).height() > $(document).height() - 100 && !loading && !window.allUnitsLoaded) {
             loading = true;
 
             $('#spinner-container').show();
@@ -183,23 +183,21 @@ jQuery(document).ready(function($) {
                 
                     // Move spinner to the end of the content
                     $('#unit-cards').append($('#spinner-container'));
-                
-                    // Extract SQL debug comment for logging, if necessary
-                    let debugSql = response.match(/<!-- SQL Debug: (.*) -->/);
-                    if (debugSql && debugSql[1]) {
-                        console.log("SQL Query:", debugSql[1]);
-                    } else {
-                        console.log("SQL Query not found in response");
-                    }
+                    $('#unit-cards').append($('#no-more-units-message'));
                 
                     // Hide loading indicator
                     $('#spinner-container').hide();
+                    $('#no-more-units-message').hide();
                 
+                    // console.log("AJAX Success Response:", response); // Print the response for debugging
+
                     // Check if more content was loaded
-                    if (response.trim() !== '') {
-                        window.offset += 10; // Increment offset for next load
-                    } else {
+                    if (response.trim() === '') {
                         console.log("No more units to load.");
+                        $('#no-more-units-message').show();
+                        window.allUnitsLoaded = true; // Update the flag as all units are loaded
+                    } else {
+                        window.offset += 10; // Increment offset for next load
                     }
                 
                     // Reset the loading flag

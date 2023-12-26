@@ -83,7 +83,8 @@ function condoapp_load_more_units() {
     }
 
     // Echo HTML and SQL query for debugging (remove SQL echo in production)
-    echo $html . "<!-- SQL Debug: " . htmlspecialchars($debug_sql) . " -->";
+    // echo $html . "<!-- SQL Debug: " . htmlspecialchars($debug_sql) . " -->";
+    echo $html;
     // echo "SQL Debug: " . htmlspecialchars($debug_sql);
     wp_die();
 }

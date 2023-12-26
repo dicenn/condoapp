@@ -42,14 +42,19 @@ jQuery(document).ready(function($) {
             }
         };
 
-        window.offset = 0; // Initialize with 10 as the first set of units is already loaded
+        // Scroll to the top of the page
+        $('html, body').animate({ scrollTop: 0 }, 'slow');
 
+        window.offset = 0; // Initialize with 10 as the first set of units is already loaded
+        window.allUnitsLoaded = false; // reset
         // Trigger filter update
         filterUnits();
     });
 
     $('#apply-filters-btn').click(function() {
         window.offset = 0; // Reset offset for filtered results
+        window.allUnitsLoaded = false; // reset
+        $('html, body').animate({ scrollTop: 0 }, 'slow');
         filterUnits(); // Now call filterUnits
     });
     
@@ -162,6 +167,7 @@ jQuery(document).ready(function($) {
                     value: value,
                     text: displayValue //+ ' Bedroom' + (value > 1 ? 's' : '') // Adjust this line as needed for other filters
                 }));
+                
             });
         }
     
@@ -172,7 +178,10 @@ jQuery(document).ready(function($) {
             buttonWidth: '100%',
             nonSelectedText: '', // Changed text here
             nSelectedText: 'Selected',
-            allSelectedText: 'All Selected'
+            allSelectedText: 'All Selected',
+            templates: {
+                li: '<li style="max-width: 240px;"><a href="javascript:void(0);"><label class="pl-2" style="white-space: normal; overflow: hidden; text-overflow: ellipsis; max-width: 100%;"></label></a></li>'
+            }
         }).change(function() {
             window.currentFilters[filterDataKey] = $(this).val();
             // window.offset = 0; //needed previously when filters were triggered on any modification, commented out when moved 'filter' button
@@ -182,6 +191,7 @@ jQuery(document).ready(function($) {
     
     function filterUnits() {
         var spinnerContainer = $('#spinner-container').detach(); // Detach the spinner container
+        var noMoreUnits = $('#no-more-units-message').detach(); // Detach the "No more units" container
         spinnerContainer.show(); // Show spinner
     
         $.ajax({
@@ -195,9 +205,20 @@ jQuery(document).ready(function($) {
             },
             success: function(response) {
                 $('#unit-cards').html(response); // Replace the content in unit-cards
+    
+                // Count the number of unit cards loaded in the response
+                var loadedUnitsCount = $(response).filter('.unit-card').length;
+    
+                if (loadedUnitsCount < 10) {
+                    noMoreUnits.show(); // Show "No more units" message
+                } else {
+                    noMoreUnits.hide(); // Hide "No more units" message
+                    window.offset = 10; // Update offset for next load
+                }
+    
                 $('#unit-cards').append(spinnerContainer); // Reattach the spinner container
-                spinnerContainer.hide(); // Hide spinner on error
-                window.offset = 10; // Update offset for next load
+                $('#unit-cards').append(noMoreUnits); // Reattach the "No more units" container
+                spinnerContainer.hide(); // Hide spinner
             },
             error: function(error) {
                 console.error('Error:', error);
