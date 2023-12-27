@@ -21,10 +21,6 @@ Text Domain: condoapptheme
     border-bottom: 1px solid #dee2e6; /* Light border for separation, adjust as needed */
 }
 
-.card-img {
-    /* If you want a border around the image or other styles */
-}
-
 .filter-section {
     margin-top: 100px;
     margin-bottom: 20px;
@@ -116,6 +112,7 @@ Text Domain: condoapptheme
     overflow: auto;
     background-color: rgba(0,0,0,0.4);
 }
+
 .modal-content {
     background-color: #fefefe;
     margin: 15% auto;
@@ -149,7 +146,6 @@ Text Domain: condoapptheme
     height: auto; /* Maintain aspect ratio */
 }
 
-
 /* Hamburger Menu Button */
 .hamburger-menu-button {
     cursor: pointer;
@@ -160,6 +156,7 @@ Text Domain: condoapptheme
     justify-content: space-around;
     width: 30px;
     height: 25px;
+    /* display: block !important; */
 }
 
 .hamburger-menu-button span {
@@ -201,6 +198,7 @@ Text Domain: condoapptheme
     cursor: pointer;
     text-align: center;
     margin-right: 20px; /* Space between button and hamburger menu */
+    display: block !important;
 }
 
 /* Responsive Adjustments */
@@ -209,19 +207,13 @@ Text Domain: condoapptheme
         height: 50px; /* Adjust for smaller screens */
     }
 
-    .header-navigation a, #speakToAgentButton {
-        display: none; /* Hide on smaller screens, as they'll be in the hamburger menu */
+    /* .header-navigation a, #speakToAgentButton {
+        display: none;
     }
-
-    .hamburger-menu-button {
-        display: flex; /* Show the hamburger menu on smaller screens */
-    }
-
-    .sidepanel .multiselect-container .dropdown-menu {
-        max-height: 50vh; /* 50% of the viewport height */
-        overflow-y: auto; /* Enable vertical scrolling */
-        overflow-x: hidden; /* Hide horizontal scrolling */
-    }
+ */
+    /* .hamburger-menu-button {
+        display: flex; 
+    } */
 }
 
 .header-right {
@@ -230,33 +222,36 @@ Text Domain: condoapptheme
 }
 
 .sidepanel .multiselect-container {
-    width: 100%; /* Ensure the dropdown container fits the side panel width */
+    max-height: 300px !important; /* This sets a maximum height for the dropdown */
+    overflow-y: auto !important; /* This allows the dropdown to scroll */
+    width: 100% !important; /* Ensure the dropdown container fits the side panel width */
 }
 
 .sidepanel .multiselect-container .dropdown-menu {
-    width: 100%; /* Dropdown menu should fit the width of the side panel */
+    width: 100% !important; /* Dropdown menu should fit the width of the side panel */
+    max-height: 300px !important; /* Adjust the max-height as needed */
+    overflow-y: auto !important; /* Enable vertical scrolling */
+    overflow-x: hidden !important; /* Hide horizontal scrollbar */
 }
 
-.sidepanel .multiselect-container .dropdown-menu li a label {
-    white-space: normal; /* Allow text to wrap to a new line */
-    overflow: hidden; /* Hide overflow text */
-    text-overflow: ellipsis; /* Add ellipsis at the end of the text if it's too long */
-    display: block; /* Ensure the label takes up the full width available */
-    line-height: 1.2; /* Adjust line height for better readability, if necessary */
-    font-size: 0.9em; /* Adjust the font size, if necessary */
-    max-width: 240px; /* Set a maximum width for each option */
+/* Specific targeting for the list items inside the dropdown */
+.sidepanel .multiselect-container .dropdown-menu > li > a > label {
+    white-space: normal !important; /* Allow text to wrap to a new line */
+    overflow: hidden !important; /* Hide overflow text */
+    text-overflow: ellipsis !important; /* Add ellipsis at the end of the text if it's too long */
+    display: block !important; /* Ensure the label takes up the full width available */
+    line-height: 1.2 !important; /* Adjust line height for better readability, if necessary */
+    font-size: 0.9em !important; /* Adjust the font size, if necessary */
 }
 
-/* This will alter the native look of the dropdown and might prevent the mobile-native menu from appearing */
-select {
-    -webkit-appearance: none; /* For Safari and older Chrome browsers */
-    -moz-appearance: none;    /* For Firefox */
-    appearance: none;         /* For modern browsers */
+/* If the dropdown is inside a modal or another container, you may need to increase specificity further */
+#mySidepanel .sidepanel .multiselect-container .dropdown-menu {
+    max-height: 300px !important; /* Adjust the max-height as needed */
+    overflow-y: auto !important; /* Enable vertical scrolling */
 }
 
-/* This targets the select element within the Bootstrap Multiselect specifically */
-.sidepanel .multiselect-container .dropdown-toggle {
-    -webkit-appearance: none; /* For Safari and older Chrome browsers */
-    -moz-appearance: none;    /* For Firefox */
-    appearance: none;         /* For modern browsers */
+#mySidepanel {
+    overflow-y: auto; /* Enables vertical scrolling if content overflows */
+    max-height: 100vh; /* Sets the maximum height of the side panel to the viewport height */
+    padding-bottom: 20px; /* Adds some space at the bottom for better accessibility */
 }

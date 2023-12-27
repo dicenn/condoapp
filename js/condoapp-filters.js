@@ -187,6 +187,9 @@ jQuery(document).ready(function($) {
             // window.offset = 0; //needed previously when filters were triggered on any modification, commented out when moved 'filter' button
             // filterUnits(); //needed previously when filters were triggered on any modification, commented out when moved 'filter' button
         });
+        $dropdown.on('click touchend', function(event) {
+            event.stopPropagation();
+        });
     }
     
     function filterUnits() {

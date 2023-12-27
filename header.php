@@ -16,6 +16,12 @@
                 </a>
             </div>
 
+            <!-- Add the hardcoded timestamp here -->
+            <div class="header-timestamp">
+                <?php
+                echo 'Updated: Dec 27, 2023, 12:07am'; // Manually change this date and time with each update
+                ?>
+            </div>
 
             <div class="header-right">
                 <button id="speakToAgentButton">Speak to an Agent</button>

@@ -16,25 +16,25 @@ get_header(); ?>
                     <input type="text" id="square-footage-range" name="square-footage-range" value="" />
                     <input type="text" id="occupancy-date-range" name="occupancy-date-range" value="" />
 
-                    <label for="bedrooms-filter"># of Bedrooms</label>
+                    <label># of Bedrooms</label>
                     <select id="bedrooms-filter" multiple="multiple"></select>
                     
-                    <label for="bathrooms-filter"># of Baths</label>
+                    <label># of Baths</label>
                     <select id="bathrooms-filter" multiple="multiple"></select>
 
-                    <label for="unit-type-filter">Unit Type</label>
+                    <label>Unit Type</label>
                     <select id="unit-type-filter" multiple="multiple"></select>
 
-                    <label for="developer-filter">Developer</label>
+                    <label>Developer</label>
                     <select id="developer-filter" multiple="multiple"></select>
 
-                    <label for="pre-occupancy-deposit-filter">Pre-occupancy Deposit</label>
+                    <label>Pre-occupancy Deposit</label>
                     <select id="pre-occupancy-deposit-filter" multiple="multiple"></select>
                     
-                    <label for="project-filter">Project</label>
+                    <label>Project</label>
                     <select id="project-filter" multiple="multiple"></select>
                     
-                    <label for="den-filter"># of Dens</label>
+                    <label># of Dens</label>
                     <select id="den-filter" multiple="multiple"></select>
 
                     <button id="apply-filters-btn" class="btn btn-primary">Apply Filters</button>
