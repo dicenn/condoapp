@@ -13,6 +13,14 @@ add_action('after_setup_theme', 'condoapptheme_setup' );
 
 // Enqueue styles and scripts
 function condoapptheme_enqueue_styles_scripts() {
+    wp_enqueue_style( 'condoapp-style', get_stylesheet_uri() ); // This is your main style.css
+    wp_enqueue_style( 'condoapp-header', get_template_directory_uri() . '/css/header.css' );
+    wp_enqueue_style( 'condoapp-filters', get_template_directory_uri() . '/css/filters.css' );
+    wp_enqueue_style( 'condoapp-unit-cards', get_template_directory_uri() . '/css/unit-cards.css' );
+    wp_enqueue_style( 'condoapp-speak-agent', get_template_directory_uri() . '/css/speak-agent.css' );
+    wp_enqueue_style( 'condoapp-sliders', get_template_directory_uri() . '/css/sliders.css' );
+    wp_enqueue_style( 'condoapp-buttons', get_template_directory_uri() . '/css/buttons.css' );
+
     // Enqueue Bootstrap CSS
     wp_enqueue_style('bootstrap-css', 'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css');
     

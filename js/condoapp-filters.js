@@ -74,6 +74,8 @@ jQuery(document).ready(function($) {
             var maxVal = Math.ceil(filterData[filterKey].max_value / (step * 2)) * (step * 2);
     
             $(sliderId).ionRangeSlider({
+                hide_min_max: true, // Hides the min-max labels
+                grid: false, // Set to false to remove the grid labels
                 type: "double",
                 grid: true,
                 min: minVal,
@@ -107,6 +109,8 @@ jQuery(document).ready(function($) {
             maxDate.setMonth(maxDate.getMonth() + 1);
     
             $(sliderId).ionRangeSlider({
+                hide_min_max: true, // Hides the min-max labels
+                grid: false, // Set to false to remove the grid labels
                 type: "double",
                 grid: true,
                 min: minDate.getTime(),

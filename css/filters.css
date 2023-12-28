@@ -1,0 +1,127 @@
+.filter-section {
+    margin-top: 100px;
+    margin-bottom: 20px;
+}
+
+.filter-section label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.filter-section .irs {
+    max-width: 200px; /* Adjust this value as needed */
+    margin: 0 auto; /* This centers the slider in its container */
+}
+
+@media (max-width: 768px) {
+    .filter-section {
+        margin-bottom: 15px;
+    }
+}
+
+/* Style for the toggle button */
+#toggleButton {
+    padding: 20px; /* Consistent padding on all sides */
+    background-color: #f8f9fa; /* Light gray background */
+    color: #495057; /* Dark grey text color */
+    cursor: pointer;
+    position: fixed;
+    top: 150px;
+    left: 0;
+    transform: translateY(-50%);
+    border-top: 3px solid #495057; /* Dark grey border on top */
+    border-bottom: 3px solid #495057; /* Dark grey border on bottom */
+    border-right: 3px solid #495057; /* Dark grey border on right */
+    border-left: none; /* No border on left */
+    border-radius: 0; /* No rounded corners */
+    z-index: 2;
+    transition: left 0.5s ease-in-out;
+    display: flex; /* Use flexbox for internal alignment */
+    align-items: center; /* Vertical alignment */
+    justify-content: center; /* Horizontal alignment */
+    flex-direction: column; /* Stack children vertically */
+    box-sizing: border-box; /* Ensures padding is included in width and height calculations */
+}
+
+.text-container {
+    position: absolute; /* Position absolute to control its placement */
+    left: 50%; /* Start from the middle of the button */
+    bottom: 50%; /* Align to the middle vertically */
+    transform: translateX(-50%) translateY(50%) rotate(-90deg); /* Adjust horizontal and vertical positioning */
+    transform-origin: center; /* Adjust origin of rotation */
+}
+
+.arrow-container {
+    transition: transform 0.5s ease-in-out; /* Smooth transition for the arrow flip */
+    display: block; /* For positioning */
+    position: absolute; /* For positioning */
+    transform-origin: center;
+    margin-top: 5px; /* Adjust space between text and arrow */
+}
+
+/* Class to be added to .arrow-container when the side panel is open */
+.arrow-container.open {
+    transform: rotate(180deg); /* Flips the arrow */
+}
+
+.sidepanel {
+    height: 100%;
+    width: 250px; /* Fixed width */
+    position: fixed;
+    z-index: 1;
+    top: 0; /* Ensure it starts at the top */
+    left: 0;
+    background-color: #f8f9fa; /* Light gray background */
+    overflow-x: hidden;
+    transition: transform 0.5s ease-in-out;
+    transform: translateX(-100%); /* Start off-screen */
+    padding-left: 10px; /* Add 10px padding to the left */
+    padding-right: 10px; /* Add 10px padding to the right */
+}
+
+.sidepanel .multiselect-container {
+    max-height: 300px !important; /* This sets a maximum height for the dropdown */
+    overflow-y: auto !important; /* This allows the dropdown to scroll */
+    width: 100% !important; /* Ensure the dropdown container fits the side panel width */
+    padding: 0 10px; /* Add horizontal padding inside the container */
+}
+
+.sidepanel .multiselect-container .dropdown-menu {
+    width: 100% !important; /* Dropdown menu should fit the width of the side panel */
+    max-height: 300px !important; /* Adjust the max-height as needed */
+    overflow-y: auto !important; /* Enable vertical scrolling */
+    overflow-x: hidden !important; /* Hide horizontal scrollbar */
+}
+
+/* Specific targeting for the list items inside the dropdown */
+.sidepanel .multiselect-container .dropdown-menu > li > a > label {
+    white-space: normal !important; /* Allow text to wrap to a new line */
+    /* overflow: hidden !important; */
+    /* text-overflow: ellipsis !important; */
+    display: block !important; /* Ensure the label takes up the full width available */
+    line-height: 1.2 !important; /* Adjust line height for better readability, if necessary */
+    font-size: 0.9em !important; /* Adjust the font size, if necessary */
+}
+
+/* If the dropdown is inside a modal or another container, you may need to increase specificity further */
+#mySidepanel .sidepanel .multiselect-container .dropdown-menu {
+    max-height: 300px !important; /* Adjust the max-height as needed */
+    overflow-y: auto !important; /* Enable vertical scrolling */
+}
+
+#mySidepanel {
+    /* overflow-y: auto; */
+    /* max-height: 100vh; */
+    padding-bottom: 20px; /* Adds some space at the bottom for better accessibility */
+}
+
+#sidepanel-overlay {
+    display: none; /* Hidden by default */
+    position: fixed;
+    z-index: 0; /* Lower than the side panel but above the page content */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+}

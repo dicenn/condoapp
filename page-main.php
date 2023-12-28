@@ -6,14 +6,31 @@ get_header(); ?>
 <div id="primary" class="content-area">
     <main id="main" class="site-main">
 
-    <button id="toggleButton" onclick="toggleNav()">Filters</button>
+    <button id="toggleButton" onclick="toggleNav()">
+        <div class="button-content">
+            <div class="text-container">
+                Filters
+            </div>
+            <div id="toggleArrow" class="arrow-container">
+                &gt;
+            </div>
+        </div>
+    </button>
 
     <!-- Side Panel for Filters -->
         <div id="mySidepanel" class="sidepanel">
             <aside id="secondary" class="widget-area">
                 <div class="filter-section">
+                    <button id="apply-filters-btn" class="btn btn-primary">Apply Filters</button>
+                    <button id="clear-filters-btn" class="btn btn-secondary">Clear Filters</button>
+                    
+                    <label>Price</label>
                     <input type="text" id="price-range" name="price-range" value="" />
+
+                    <label>Square footage</label>
                     <input type="text" id="square-footage-range" name="square-footage-range" value="" />
+
+                    <label>Occupancy date</label>
                     <input type="text" id="occupancy-date-range" name="occupancy-date-range" value="" />
 
                     <label># of Bedrooms</label>
@@ -37,11 +54,11 @@ get_header(); ?>
                     <label># of Dens</label>
                     <select id="den-filter" multiple="multiple"></select>
 
-                    <button id="apply-filters-btn" class="btn btn-primary">Apply Filters</button>
-                    <button id="clear-filters-btn" class="btn btn-secondary">Clear Filters</button>
                 </div>
             </aside>
         </div>
+
+        <div id="sidepanel-overlay" class="modal"></div>
 
         <!-- The main content area where unit cards will be displayed -->
         <section id="unit-cards" class="container mt-5">

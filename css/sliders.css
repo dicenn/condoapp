@@ -1,0 +1,40 @@
+.irs--flat .irs-bar {
+    background: #e2e6ea !important; /* Light grey color for the range selection */
+}
+
+.irs--flat .irs-min, .irs--flat .irs-max {
+    display: none; /* Hide the min-max indicators */
+}
+
+.irs--flat .irs-grid {
+    display: none; /* Hide the grid labels if not needed */
+}
+
+.irs--flat .irs-grid-pol {
+    display: none; /* Hide the grid pols if not needed */
+}
+
+.irs--flat .irs-handle>.irs-single {
+    background: #e2e6ea !important; /* Change to light grey */
+}
+
+.irs--flat .irs-grid-text {
+    display: none; /* Ensures that the x-axis labels are not displayed */
+}
+
+.irs--flat .irs-bar-edge {
+    background: #495057 !important; /* Dark grey color for the edge of the selected range */
+}
+
+.irs--flat .irs-bar {
+    background: #495057 !important; /* Dark grey color for the selected range */
+}
+
+.irs--flat .irs-handle > .irs-bar {
+    border-top-color: #495057 !important; /* Dark grey color for the handle's center line */
+}
+
+.irs--flat .irs-slider .irs-handle:after,
+.irs--flat .irs-slider .irs-handle:before {
+    border-top-color: #495057 !important; /* Dark grey color for the triangles */
+}

@@ -1,0 +1,13 @@
+.loading-indicator {
+    display: none; /* Hidden by default */
+    position: fixed; /* Fixed position relative to the viewport */
+    left: 50%; /* Center horizontally */
+    bottom: 10px; /* Closer to the bottom of the viewport */
+    transform: translateX(-50%); /* Center it horizontally */
+    z-index: 1000; /* Ensure it's above other content */
+}
+
+.loading-indicator img {
+    width: 50%; /* Resize the spinner image */
+    height: auto; /* Maintain aspect ratio */
+}

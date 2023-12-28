@@ -1,0 +1,30 @@
+.btn {
+    margin-top: 5px; /* Adds space above the button */
+    width: 100%; /* Makes sure the button stretches to the full width of its container */
+    box-sizing: border-box; /* Ensures padding is included in the width */
+}
+
+/* Add this if you haven't yet styled the .btn-secondary */
+.btn-secondary {
+    outline: none; /* Removes the outline */
+    background-color: #e2e6ea; /* A lighter grey for contrast */
+    border: 1px solid #6c757d; /* You can set this to 'none' or to a color of your choice */    
+}
+
+.btn-primary {
+    outline: none; /* Removes the outline */
+    background-color: #6c757d; /* Bootstrap secondary button color for grey */
+    border: 1px solid #6c757d; /* You can set this to 'none' or to a color of your choice */
+
+}
+
+.btn-primary:focus, .btn-primary:hover,
+.btn-secondary:focus, .btn-secondary:hover {
+    box-shadow: 0 0 0 0.2rem rgba(108, 117, 125, 0.5); /* Grey shadow */
+}
+
+#apply-filters-btn {
+    outline: none; /* Removes the outline */
+    background-color: #6c757d; /* Bootstrap's secondary button color for grey */
+    border: 1px solid #6c757d; /* You can set this to 'none' or to a color of your choice */
+}

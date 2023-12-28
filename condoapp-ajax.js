@@ -58,13 +58,22 @@ document.querySelector('.hamburger-menu-button').addEventListener('click', funct
 function toggleNav() {
     var sidepanel = document.getElementById("mySidepanel");
     var toggleButton = document.getElementById("toggleButton");
+    var arrowContainer = document.getElementById("toggleArrow");
+    var overlay = document.getElementById('sidepanel-overlay');
+    var body = document.body;
 
     if (sidepanel.style.transform === "translateX(0px)") {
-        sidepanel.style.transform = "translateX(-100%)"; // Move panel out of view
-        toggleButton.style.left = '0'; // Move button to its original position
+        sidepanel.style.transform = "translateX(-100%)";
+        toggleButton.style.left = '0';
+        overlay.style.display = 'none';
+        body.style.overflow = 'auto';
+        arrowContainer.classList.remove('open');
     } else {
-        sidepanel.style.transform = "translateX(0px)"; // Move panel into view
-        toggleButton.style.left = '250px'; // Move button to the right by the width of the panel
+        sidepanel.style.transform = "translateX(0px)";
+        toggleButton.style.left = '250px';
+        overlay.style.display = 'block';
+        body.style.overflow = 'hidden';
+        arrowContainer.classList.add('open');
     }
 }
 

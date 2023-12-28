@@ -16,24 +16,21 @@
                 </a>
             </div>
 
-            <!-- Add the hardcoded timestamp here -->
-            <div class="header-timestamp">
-                <?php
-                echo 'Updated: Dec 27, 2023, 12:07am'; // Manually change this date and time with each update
-                ?>
-            </div>
-
             <div class="header-right">
-                <button id="speakToAgentButton">Speak to an Agent</button>
-
-                <!-- Hamburger Menu Button -->
-                <button class="hamburger-menu-button">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
+                <table class="header-buttons-table">
+                    <tr>
+                        <td class="speak-to-agent-cell">
+                            <button id="speakToAgentButton">Speak to an Agent</button>
+                        </td>
+                        <td class="hamburger-menu-cell">
+                            <!-- Hamburger Menu Button -->
+                            <button class="hamburger-menu-button">
+                                <img src="<?php echo get_stylesheet_directory_uri(); ?>/assets/hamburger.png" alt="Menu">
+                            </button>
+                        </td>
+                    </tr>
+                </table>
             </div>
-        </div>
 
         <!-- Menu Items Container (Initially Hidden) -->
         <div class="hamburger-menu-content">
