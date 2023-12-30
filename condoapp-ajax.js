@@ -1,29 +1,20 @@
-// event listener for the 'speak to an agent' form
 document.addEventListener('DOMContentLoaded', function() {
     // Modal handling code
     var modal = document.getElementById("agentModal");
-    var btn = document.getElementById("speakToAgentButton");
     var span = document.getElementById("closeModal");
 
-    if (btn && modal) {
-        btn.onclick = function() {
+    // Event listener for the 'Speak to an Agent' buttons, including dynamically added ones
+    document.addEventListener('click', function(event) {
+        if (event.target.matches('#speakToAgentButton') || event.target.matches('.speakToAgentButton')) {
             modal.style.display = "block";
-        };
-    }
-
-    if (span) {
-        span.onclick = function() {
+        } else if (event.target == span) {
             modal.style.display = "none";
-        };
-    }
-
-    window.onclick = function(event) {
-        if (event.target == modal) {
+        } else if (event.target == modal) {
             modal.style.display = "none";
         }
-    };
+    });
 
-    // Form submission handling with AJAX
+    // AJAX form submission handling
     var form = document.getElementById('agentContactForm');
     var messageElement = document.getElementById('formSubmissionMessage');
 
@@ -41,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => response.text())
             .then(data => {
-                // console.log(data); // You can see the response here
                 messageElement.innerText = 'Thanks for submitting. We will contact you soon.';
             })
             .catch(error => console.error('Error:', error));

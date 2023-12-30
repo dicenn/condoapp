@@ -54,7 +54,7 @@
 .arrow-container {
     transition: transform 0.5s ease-in-out; /* Smooth transition for the arrow flip */
     display: block; /* For positioning */
-    position: absolute; /* For positioning */
+    position: absolute ; /* For positioning */
     transform-origin: center;
     margin-top: 5px; /* Adjust space between text and arrow */
 }

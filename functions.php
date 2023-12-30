@@ -5,12 +5,6 @@ use PhpOffice\PhpSpreadsheet\Calculation\Financial;
 // kill the wordpress admin bar at the top of the page in the browser
 add_filter('show_admin_bar', '__return_false');
 
-// Theme setup function
-function condoapptheme_setup() {
-    // Add support for various WordPress features here if needed
-}
-add_action('after_setup_theme', 'condoapptheme_setup' );
-
 // Enqueue styles and scripts
 function condoapptheme_enqueue_styles_scripts() {
     wp_enqueue_style( 'condoapp-style', get_stylesheet_uri() ); // This is your main style.css
@@ -100,7 +94,7 @@ add_action('wp_ajax_nopriv_load_more_units', 'condoapp_load_more_units');
 add_action('wp_ajax_load_more_units', 'condoapp_load_more_units');
 
 // generates the html unit card
-function condoapp_get_unit_card_html_robust($unit) {
+function condoapp_get_unit_card_html_old($unit) {
     // Default image if floor_plan_link is empty
     // $default_image = get_template_directory_uri() . '/images/default-floorplan.jpg';
     // $image = !empty($unit->jpg_link) ? esc_url($unit->jpg_link) : $default_image;
@@ -350,7 +344,7 @@ add_action('wp_ajax_nopriv_filter_units', 'condoapp_filter_units');
 add_action('wp_ajax_filter_units', 'condoapp_filter_units');
 
 // temporary get unit card function for testing purposes
-function condoapp_get_unit_card_html($unit) {
+function condoapp_get_unit_card_html_tester($unit) {
     // Fetch all cash flow data
     $cashflowData = fetch_cashflow_data();
 
@@ -725,3 +719,221 @@ function handle_agent_contact_form() {
     }
 }
 add_action('init', 'handle_agent_contact_form');
+
+function condoapp_get_unit_card_html($unit) {
+    // Fetch all cash flow data
+    $cashflowData = fetch_cashflow_data();
+
+    // Set a default appreciation rate
+    $appreciationRate = 0.06;
+
+    // Process and calculate cash flows for the specific unit
+    $processedData = process_and_calculate_cashflows($cashflowData, null, $appreciationRate, null);
+
+    // Find the processed data for the current unit
+    $unitProcessedData = null;
+    foreach ($processedData as $data) {
+        if ($data['id'] == $unit->id) {
+            $unitProcessedData = $data;
+            break;
+        }
+    }
+
+    // Check if processed data was found
+    if ($unitProcessedData === null) {
+        return 'No cash flow data available for this unit.';
+    }
+
+    // Determine the default values for holding period and rent
+    $holdingPeriod = $unitProcessedData['occupancy_index'];
+    $rent = 0;
+    foreach ($unitProcessedData['rent'] as $rentValue) {
+        if ($rentValue > 0) {
+            $rent = $rentValue;
+            break;
+        }
+    }
+
+    // Calculate XIRR
+    $xirrResult = calculateXIRR($unitProcessedData['net_cash_flows'], $unitProcessedData['corresponding_date']);
+    
+    // Format XIRR result
+    if (is_numeric($xirrResult)) {
+        $xirrFormatted = number_format($xirrResult * 100, 2) . '%';
+    } else {
+        $xirrFormatted = $xirrResult; // Display the error message
+    }
+
+    // Generate the unit card HTML with Bootstrap classes for responsiveness
+    
+    ob_start(); // Start output buffering
+    ?>
+    <div class="unit-card container mt-3">
+        <!-- Financials Section -->
+        <div class="row">
+            <!-- Table for Annual Investment Value (XIRR) -->
+            <div class="col-6">
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr>
+                            <td><span class="xirr-result"><?php echo esc_html($xirrFormatted); ?></span></td>
+                            <td>Annual Return</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Table for Unit Price Value -->
+            <div class="col-6">
+                <table class="table table-bordered">
+                    <tbody>
+                        <tr>
+                            <td>$<?php echo esc_html(number_format($unit->price)); ?></td>
+                            <td>Unit Price</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Triptych Section: Image, Details, and Adjustments -->
+        <div class="row">
+            <!-- Section 1: Floor Plan Image -->
+            <div class="col-md-4">
+                <img src="<?php echo esc_url($unit->jpg_link); ?>" class="img-fluid" alt="Floor Plan">
+            </div>
+
+            <!-- Section 2: Unit and Project Details -->
+            <div class="col-md-4">
+                <h4>Unit Details</h4>
+                <table class="table">
+                    <tbody>
+                        <!-- Unit Details -->
+                        <tr>
+                            <td>Model</td>
+                            <td><?php echo esc_html($unit->model); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Unit #</td>
+                            <td><?php echo esc_html($unit->unit_number); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Beds</td>
+                            <td><?php echo esc_html($unit->bedrooms); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Baths</td>
+                            <td><?php echo esc_html($unit->bathrooms); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Sqft</td>
+                            <td><?php echo esc_html($unit->interior_size); ?></td>
+                        </tr>
+                        <tr>
+                            <td>View</td>
+                            <td><?php echo esc_html($unit->exposure_clean); ?></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h4>Project Details</h4>
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <td>Project</td>
+                            <td><?php echo esc_html($unit->project); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Address</td>
+                            <td><?php echo esc_html($unit->address); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Developer</td>
+                            <td><?php echo esc_html($unit->developer); ?></td>
+                        </tr>
+                        <tr>
+                            <td>Occupancy Date</td>
+                            <td><?php echo esc_html($unit->occupancy_date); ?></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <button id="speakToAgentButton" class="btn btn-primary">Speak to an Agent</button>
+            </div>
+
+            <!-- Section 3: Adjustments -->
+            <div class="col-md-4">
+                <h4>Adjustments</h4>
+                <div class="adjustments-container">
+                    <!-- Holding Period -->
+                    <div class="form-group">
+                        <label>Holding Period (Years):</label>
+                        <div class="input-group mb-3">
+                            <input type="number" class="form-control holding-period" value="<?php echo esc_attr($holdingPeriod); ?>">
+                            <div class="input-group-append">
+                                <button class="btn change-button decrement" data-step="-1">
+                                    <img src="<?php echo get_template_directory_uri(); ?>/assets/decrement.png" alt="-" style="height: 30px; width: 30px;">
+                                </button>
+                                <button class="btn change-button increment" data-step="1">
+                                    <img src="<?php echo get_template_directory_uri(); ?>/assets/increment.png" alt="+" style="height: 30px; width: 30px;">
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rent -->
+                    <div class="form-group">
+                        <label>Rent ($):</label>
+                        <div class="input-group mb-3">
+                            <input type="number" class="form-control rent" value="<?php echo esc_attr($rent); ?>">
+                            <div class="input-group-append">
+                                <button class="btn change-button decrement" data-step="-100">
+                                    <img src="<?php echo get_template_directory_uri(); ?>/assets/decrement.png" alt="-" style="height: 30px; width: 30px;">
+                                </button>
+                                <button class="btn change-button increment" data-step="100">
+                                   <img src="<?php echo get_template_directory_uri(); ?>/assets/increment.png" alt="-" style="height: 30px; width: 30px;">
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Appreciation Rate -->
+                    <div class="form-group">
+                        <label>Appreciation Rate (%):</label>
+                        <div class="input-group mb-3">
+                            <input type="number" class="form-control appreciation-rate" value="<?php echo esc_attr($appreciationRate); ?>">
+                            <div class="input-group-append">
+                                <button class="btn change-button decrement" data-step="-0.01">
+                                    <img src="<?php echo get_template_directory_uri(); ?>/assets/decrement.png" alt="-" style="height: 30px; width: 30px;">
+                                </button>
+                                <button class="btn change-button increment" data-step="0.01">
+                                    <img src="<?php echo get_template_directory_uri(); ?>/assets/increment.png" alt="-" style="height: 30px; width: 30px;">
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary calculate-xirr" data-unit-id="<!-- Unit ID -->">Calculate XIRR</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.unit-card').forEach(function(card) {
+            card.addEventListener('click', function(event) {
+                if (event.target.closest('.change-button')) {
+                    var button = event.target.closest('.change-button');
+                    var input = button.closest('.input-group').querySelector('input');
+                    var step = parseFloat(button.getAttribute('data-step'));
+                    input.value = parseFloat(input.value) + step;
+                }
+            });
+        });
+    });
+    </script>
+    <?php
+    $html = ob_get_clean(); // Store the contents of the output buffer and clear it
+    return $html;
+}
