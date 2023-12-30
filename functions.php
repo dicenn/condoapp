@@ -865,74 +865,23 @@ function condoapp_get_unit_card_html($unit) {
             <div class="col-md-4">
                 <h4>Adjustments</h4>
                 <div class="adjustments-container">
-                    <!-- Holding Period -->
                     <div class="form-group">
-                        <label>Holding Period (Years):</label>
-                        <div class="input-group mb-3">
-                            <input type="number" class="form-control holding-period" value="<?php echo esc_attr($holdingPeriod); ?>">
-                            <div class="input-group-append">
-                                <button class="btn change-button decrement" data-step="-1">
-                                    <img src="<?php echo get_template_directory_uri(); ?>/assets/decrement.png" alt="-" style="height: 30px; width: 30px;">
-                                </button>
-                                <button class="btn change-button increment" data-step="1">
-                                    <img src="<?php echo get_template_directory_uri(); ?>/assets/increment.png" alt="+" style="height: 30px; width: 30px;">
-                                </button>
-                            </div>
-                        </div>
+                        <label for="holding-period-<?php echo esc_attr($unit->id); ?>">Holding Period (Years):</label>
+                        <input type="number" class="form-control holding-period" id="holding-period-<?php echo esc_attr($unit->id); ?>" value="<?php echo esc_attr($holdingPeriod); ?>">
                     </div>
-
-                    <!-- Rent -->
                     <div class="form-group">
-                        <label>Rent ($):</label>
-                        <div class="input-group mb-3">
-                            <input type="number" class="form-control rent" value="<?php echo esc_attr($rent); ?>">
-                            <div class="input-group-append">
-                                <button class="btn change-button decrement" data-step="-100">
-                                    <img src="<?php echo get_template_directory_uri(); ?>/assets/decrement.png" alt="-" style="height: 30px; width: 30px;">
-                                </button>
-                                <button class="btn change-button increment" data-step="100">
-                                   <img src="<?php echo get_template_directory_uri(); ?>/assets/increment.png" alt="-" style="height: 30px; width: 30px;">
-                                </button>
-                            </div>
-                        </div>
+                        <label for="rent-<?php echo esc_attr($unit->id); ?>">Rent ($):</label>
+                        <input type="number" class="form-control rent" id="rent-<?php echo esc_attr($unit->id); ?>" value="<?php echo esc_attr($rent); ?>">
                     </div>
-
-                    <!-- Appreciation Rate -->
                     <div class="form-group">
-                        <label>Appreciation Rate (%):</label>
-                        <div class="input-group mb-3">
-                            <input type="number" class="form-control appreciation-rate" value="<?php echo esc_attr($appreciationRate); ?>">
-                            <div class="input-group-append">
-                                <button class="btn change-button decrement" data-step="-0.01">
-                                    <img src="<?php echo get_template_directory_uri(); ?>/assets/decrement.png" alt="-" style="height: 30px; width: 30px;">
-                                </button>
-                                <button class="btn change-button increment" data-step="0.01">
-                                    <img src="<?php echo get_template_directory_uri(); ?>/assets/increment.png" alt="-" style="height: 30px; width: 30px;">
-                                </button>
-                            </div>
-                        </div>
+                        <label for="appreciation-rate-<?php echo esc_attr($unit->id); ?>">Appreciation Rate (%):</label>
+                        <input type="number" class="form-control appreciation-rate" id="appreciation-rate-<?php echo esc_attr($unit->id); ?>" value="<?php echo esc_attr($appreciationRate); ?>">
                     </div>
-
-                    <button class="btn btn-primary calculate-xirr" data-unit-id="<!-- Unit ID -->">Calculate XIRR</button>
+                    <button class="btn btn-primary calculate-xirr" data-unit-id="<?php echo esc_attr($unit->id); ?>">Calculate XIRR</button>
                 </div>
             </div>
         </div>
     </div>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.unit-card').forEach(function(card) {
-            card.addEventListener('click', function(event) {
-                if (event.target.closest('.change-button')) {
-                    var button = event.target.closest('.change-button');
-                    var input = button.closest('.input-group').querySelector('input');
-                    var step = parseFloat(button.getAttribute('data-step'));
-                    input.value = parseFloat(input.value) + step;
-                }
-            });
-        });
-    });
-    </script>
     <?php
     $html = ob_get_clean(); // Store the contents of the output buffer and clear it
     return $html;
