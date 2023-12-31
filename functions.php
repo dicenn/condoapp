@@ -14,6 +14,7 @@ function condoapptheme_enqueue_styles_scripts() {
     wp_enqueue_style( 'condoapp-speak-agent', get_template_directory_uri() . '/css/speak-agent.css' );
     wp_enqueue_style( 'condoapp-sliders', get_template_directory_uri() . '/css/sliders.css' );
     wp_enqueue_style( 'condoapp-buttons', get_template_directory_uri() . '/css/buttons.css' );
+    wp_enqueue_style( 'condoapp-global', get_template_directory_uri() . '/css/global.css' );
 
     // Enqueue Bootstrap CSS
     wp_enqueue_style('bootstrap-css', 'https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css');
@@ -768,45 +769,47 @@ function condoapp_get_unit_card_html($unit) {
     
     ob_start(); // Start output buffering
     ?>
-    <div class="unit-card container mt-3">
+    <div class="unit-card container-fluid mt-3"> <!-- Use container-fluid for full width -->
         <!-- Financials Section -->
-        <div class="row">
-            <!-- Table for Annual Investment Value (XIRR) -->
-            <div class="col-6">
-                <table class="table table-bordered">
-                    <tbody>
-                        <tr>
-                            <td><span class="xirr-result"><?php echo esc_html($xirrFormatted); ?></span></td>
-                            <td>Annual Return</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <div class="financials-container">
+            <div class="row">
+                <!-- Table for Annual Investment Value (XIRR) -->
+                <div class="col-md-3"> <!-- Adjust the size as needed -->
+                    <table class="table table-bordered financial-table">
+                        <tbody>
+                            <tr>
+                                <td><span class="xirr-result"><?php echo esc_html($xirrFormatted); ?></span></td>
+                                <td>annual return</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
-            <!-- Table for Unit Price Value -->
-            <div class="col-6">
-                <table class="table table-bordered">
-                    <tbody>
-                        <tr>
-                            <td>$<?php echo esc_html(number_format($unit->price)); ?></td>
-                            <td>Unit Price</td>
-                        </tr>
-                    </tbody>
-                </table>
+                <!-- Table for Unit Price Value -->
+                <div class="col-md-3"> <!-- Adjust the size as needed -->
+                    <table class="table table-bordered financial-table">
+                        <tbody>
+                            <tr>
+                                <td>$<?php echo esc_html(number_format($unit->price)); ?></td>
+                                <td>unit price</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <!-- Triptych Section: Image, Details, and Adjustments -->
         <div class="row">
             <!-- Section 1: Floor Plan Image -->
-            <div class="col-md-4">
-                <img src="<?php echo esc_url($unit->jpg_link); ?>" class="img-fluid" alt="Floor Plan">
+            <div class="col-lg-4"> <!-- Adjusted to take up 4 columns on large screens -->
+                <img src="<?php echo esc_url($unit->jpg_link); ?>" class="img-fluid unit-card-img" alt="Floor Plan">
             </div>
 
             <!-- Section 2: Unit and Project Details -->
-            <div class="col-md-4">
-                <h4>Unit Details</h4>
-                <table class="table">
+            <div class="col-lg-5"> <!-- Adjusted to take up 5 columns on large screens -->
+                <span class="bold-text">Unit Details</span>
+                <table class="table project-details-table">
                     <tbody>
                         <!-- Unit Details -->
                         <tr>
@@ -836,8 +839,8 @@ function condoapp_get_unit_card_html($unit) {
                     </tbody>
                 </table>
 
-                <h4>Project Details</h4>
-                <table class="table">
+                <span class="bold-text">Project Details</span>
+                <table class="table project-details-table">
                     <tbody>
                         <tr>
                             <td>Project</td>
@@ -852,7 +855,7 @@ function condoapp_get_unit_card_html($unit) {
                             <td><?php echo esc_html($unit->developer); ?></td>
                         </tr>
                         <tr>
-                            <td>Occupancy Date</td>
+                            <td>Occupancy</td>
                             <td><?php echo esc_html($unit->occupancy_date); ?></td>
                         </tr>
                     </tbody>
@@ -862,8 +865,8 @@ function condoapp_get_unit_card_html($unit) {
             </div>
 
             <!-- Section 3: Adjustments -->
-            <div class="col-md-4">
-                <h4>Adjustments</h4>
+            <div class="col-lg-3"> <!-- Adjusted to take up 3 columns on large screens -->
+                <span class="bold-text">Adjustments</span>
                 <div class="adjustments-container">
                     <div class="form-group">
                         <label for="holding-period-<?php echo esc_attr($unit->id); ?>">Holding Period (Years):</label>

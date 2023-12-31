@@ -1,3 +1,4 @@
+// event listener for the speak to an agent button
 document.addEventListener('DOMContentLoaded', function() {
     // Modal handling code
     var modal = document.getElementById("agentModal");

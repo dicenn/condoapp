@@ -1,0 +1,8 @@
+#main {
+    padding-top: 100px;
+}
+
+body {
+    font-size: 12px; /* Set global font size, adjust as needed */
+    font-family: Arial, sans-serif; /* This will apply Arial throughout your site */
+}

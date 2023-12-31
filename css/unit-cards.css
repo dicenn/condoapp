@@ -11,3 +11,71 @@
     width: 50%; /* Resize the spinner image */
     height: auto; /* Maintain aspect ratio */
 }
+
+.unit-card {
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Adjust values as needed */
+    padding-bottom: 20px; /* Adjust as needed */
+    border: 1px solid #cccccc; /* Light grey border */
+    font-size: 13px; /* Smaller font size for unit card, adjust as needed */
+}
+
+.unit-card table {
+    border: none;
+}
+.unit-card table td, .unit-card table th {
+    border: none;
+    padding: 2px; /* Reduce padding, adjust as needed */
+}
+
+.bold-text {
+    font-weight: bold;
+}
+
+.unit-card-img {
+    border: 1px solid #cccccc; /* Light grey border */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Drop shadow */
+}
+
+.unit-details-table td:nth-child(1), .project-details-table td:nth-child(1) {
+    width: 25%; /* Adjust as needed */
+}
+
+.unit-details-table td:nth-child(2), .project-details-table td:nth-child(2) {
+    width: 75%; /* Adjust as needed */
+}
+
+.unit-card .row, .unit-card .col-* {
+    padding-right: 0;
+    padding-left: 0;
+    margin-right: 0;
+    margin-left: 0;
+}
+
+.financial-table {
+    table-layout: fixed; /* This ensures consistent column widths */
+    width: 100%; /* Full width of its container */
+}
+
+.financial-table td:nth-child(1) {
+    font-size: 16px; /* Larger font size */
+    font-weight: bold;
+    width: 60%; /* Column 1 width */
+}
+
+.financial-table td:nth-child(2) {
+    font-size: 14px; /* Smaller font size */
+    font-style: italic;
+    text-align: left;
+    width: 40%; /* Column 2 width */
+    white-space: normal; /* Allows text to wrap */
+    word-break: break-word; /* Breaks the word if necessary */
+}
+
+.financials-container {
+    background-color: #f5f5f5;
+    margin: 0 -15px; /* To offset any internal padding from child elements */
+}
+
+.financials-container .row:first-child .col-md-3:first-child {
+    padding-left: 15px; /* Add padding to the first table for spacing */
+}
