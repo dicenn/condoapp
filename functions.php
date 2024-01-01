@@ -622,7 +622,7 @@ function recalculate_xirr_ajax_handler() {
     // echo '<pre>XIRR Calculation Result: ' . $xirrResult . '</pre>';
     
     if (is_numeric($xirrResult)) {
-        $xirrFormatted = number_format($xirrResult * 100, 2) . '%';
+        $xirrFormatted = number_format($xirrResult * 100, 1) . '%';
         wp_send_json_success(array('new_xirr' => $xirrFormatted));
     } else {
         wp_send_json_error('Error: ' . $xirrResult);
@@ -760,7 +760,7 @@ function condoapp_get_unit_card_html($unit) {
     
     // Format XIRR result
     if (is_numeric($xirrResult)) {
-        $xirrFormatted = number_format($xirrResult * 100, 2) . '%';
+        $xirrFormatted = number_format($xirrResult * 100, 1) . '%';
     } else {
         $xirrFormatted = $xirrResult; // Display the error message
     }
@@ -772,26 +772,26 @@ function condoapp_get_unit_card_html($unit) {
     <div class="unit-card container-fluid mt-3"> <!-- Use container-fluid for full width -->
         <!-- Financials Section -->
         <div class="financials-container">
-            <div class="row">
-                <!-- Table for Annual Investment Value (XIRR) -->
-                <div class="col-md-3"> <!-- Adjust the size as needed -->
-                    <table class="table table-bordered financial-table">
+            <div class="row align-items-center">
+                <!-- First Table for XIRR -->
+                <div class="col-auto">
+                    <table class="table">
                         <tbody>
                             <tr>
-                                <td><span class="xirr-result"><?php echo esc_html($xirrFormatted); ?></span></td>
-                                <td>annual return</td>
+                                <td class="xirr-result"><?php echo esc_html($xirrFormatted); ?></td>
+                                <td class="label-cell">annual return</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <!-- Table for Unit Price Value -->
-                <div class="col-md-3"> <!-- Adjust the size as needed -->
-                    <table class="table table-bordered financial-table">
+                <!-- Second Table for Unit Price -->
+                <div class="col-auto">
+                    <table class="table">
                         <tbody>
                             <tr>
-                                <td>$<?php echo esc_html(number_format($unit->price)); ?></td>
-                                <td>unit price</td>
+                                <td class="value-cell">$<?php echo esc_html(number_format($unit->price)); ?></td>
+                                <td class="label-cell">unit price</td>
                             </tr>
                         </tbody>
                     </table>

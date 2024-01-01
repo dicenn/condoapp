@@ -52,20 +52,31 @@ function toggleNav() {
     var arrowContainer = document.getElementById("toggleArrow");
     var overlay = document.getElementById('sidepanel-overlay');
     var body = document.body;
+    var headerContainer = document.querySelector('.header-container'); // Adjust selector if necessary
 
     if (sidepanel.style.transform === "translateX(0px)") {
         sidepanel.style.transform = "translateX(-100%)";
         toggleButton.style.left = '0';
         overlay.style.display = 'none';
         body.style.overflow = 'auto';
+        body.style.paddingRight = '0';
+        if (headerContainer) headerContainer.style.paddingRight = '0'; // Reset the padding for the header as well
         arrowContainer.classList.remove('open');
     } else {
         sidepanel.style.transform = "translateX(0px)";
         toggleButton.style.left = '250px';
         overlay.style.display = 'block';
         body.style.overflow = 'hidden';
+        var scrollbarWidthValue = scrollbarWidth() + 'px';
+        body.style.paddingRight = scrollbarWidthValue;
+        if (headerContainer) headerContainer.style.paddingRight = scrollbarWidthValue; // Apply the same padding to the header
         arrowContainer.classList.add('open');
     }
+}
+
+// Function to calculate the width of the scrollbar
+function scrollbarWidth() {
+    return window.innerWidth - document.documentElement.clientWidth;
 }
 
 // console.log('condoapp-ajax.js is loaded');

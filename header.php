@@ -20,7 +20,7 @@
                 <table class="header-buttons-table">
                     <tr>
                         <td class="speak-to-agent-cell">
-                            <button id="speakToAgentButton">Speak to an Agent</button>
+                            <button id="speakToAgentButton">Speak to Sales</button>
                         </td>
                         <td class="hamburger-menu-cell">
                             <!-- Hamburger Menu Button -->

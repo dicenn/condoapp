@@ -34,7 +34,7 @@
     border-right: 3px solid #495057; /* Dark grey border on right */
     border-left: none; /* No border on left */
     border-radius: 0; /* No rounded corners */
-    z-index: 2;
+    z-index: 1000;
     transition: left 0.5s ease-in-out;
     display: flex; /* Use flexbox for internal alignment */
     align-items: center; /* Vertical alignment */
@@ -113,12 +113,13 @@
     /* overflow-y: auto; */
     /* max-height: 100vh; */
     padding-bottom: 20px; /* Adds some space at the bottom for better accessibility */
+    z-index: 1000; /* Higher than the overlay to appear on top */
 }
 
 #sidepanel-overlay {
     display: none; /* Hidden by default */
     position: fixed;
-    z-index: 0; /* Lower than the side panel but above the page content */
+    z-index: 999; /* Lower than the side panel but above the page content */
     left: 0;
     top: 0;
     width: 100%;
