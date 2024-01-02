@@ -12,9 +12,13 @@
     height: auto; /* Maintain aspect ratio */
 }
 
+.img-fluid { /* or use a specific class if available */
+    margin-top: 15px; /* Use margin instead of padding */
+    margin-bottom: 7px; /* Use margin instead of padding */
+}
+
 .unit-card {
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Adjust values as needed */
-    padding-bottom: 20px; /* Adjust as needed */
     border: 1px solid #cccccc; /* Light grey border */
     font-size: 13px; /* Smaller font size for unit card, adjust as needed */
 }
@@ -28,14 +32,23 @@
 }
 
 .bold-text {
+    display: block; /* Makes the element a block-level element */
     font-weight: bold;
     padding-top: 15px !important; /* Adjust the padding value as needed */
-
+    border-bottom: 1px solid #ccc; /* Thin grey border */
 }
 
 .unit-card-img {
+    display: block; /* Makes the element a block-level element */
+    padding-top: 15px;
     border: 1px solid #cccccc; /* Light grey border */
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1); /* Drop shadow */
+    transition: transform 0.3s ease; /* Smooth transition for the transform property */
+    cursor: pointer; /* Change cursor to indicate clickable item */
+}
+
+.unit-card-img:hover {
+    transform: scale(1.03); /* Slightly scale up the image on hover */
 }
 
 .unit-card-img, .adjustment-input {
@@ -109,7 +122,25 @@
     margin-top: 0 !important; /* Preserve your setting to remove bottom margin from tables */
 }
 
-#speakToAgentButton {
-    display: inline-block; /* Preserved */
-    width: auto; /* Preserved */
+/* close expand image modal styling */
+.close {
+    position: absolute;
+    top: 10px; /* Adjusted */
+    right: 10px; /* Adjusted */
+    font-size: 45px !important;
+    color: #000;
+    opacity: 1;
+    padding: 10px; /* Add padding */
+    line-height: 5; /* Adjust line height */
+    background-color: transparent; /* Optional: make background transparent */
+    border: none; /* Remove border if present */
+    z-index: 1050; /* A value higher than other elements */
+}
+
+.close:hover,
+.close:focus {
+    color: #000;
+    text-decoration: none;
+    cursor: pointer;
+    opacity: 0.75;
 }

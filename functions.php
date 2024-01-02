@@ -802,8 +802,8 @@ function condoapp_get_unit_card_html($unit) {
         <!-- Triptych Section: Image, Details, and Adjustments -->
         <div class="row">
             <!-- Section 1: Floor Plan Image -->
-            <div class="col-lg-4"> <!-- Adjusted to take up 4 columns on large screens -->
-                <img src="<?php echo esc_url($unit->jpg_link); ?>" class="img-fluid unit-card-img" alt="Floor Plan">
+            <div class="col-lg-3">
+                <img src="<?php echo esc_url($unit->jpg_link); ?>" class="img-fluid unit-card-img" alt="Floor Plan" onclick="openModal('<?php echo esc_url($unit->jpg_link); ?>')">
             </div>
 
             <!-- Section 2: Unit and Project Details -->
@@ -861,11 +861,11 @@ function condoapp_get_unit_card_html($unit) {
                     </tbody>
                 </table>
 
-                <button id="speakToAgentButton" class="btn btn-primary">Speak to an Agent</button>
+                <button id="speakToAgentButton" class="btn btn-primary">Speak to Sales</button>
             </div>
 
             <!-- Section 3: Adjustments -->
-            <div class="col-lg-3"> <!-- Adjusted to take up 3 columns on large screens -->
+            <div class="col-lg-4"> <!-- Adjusted to take up 3 columns on large screens -->
                 <span class="bold-text">Adjustments</span>
                 <div class="adjustments-container">
                     <div class="form-group">
@@ -885,6 +885,7 @@ function condoapp_get_unit_card_html($unit) {
             </div>
         </div>
     </div>
+
     <?php
     $html = ob_get_clean(); // Store the contents of the output buffer and clear it
     return $html;

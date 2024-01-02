@@ -1,4 +1,4 @@
-// event listener for the speak to an agent button
+// event listener for the speak to an agent button and also the expand image modal
 document.addEventListener('DOMContentLoaded', function() {
     // Modal handling code
     var modal = document.getElementById("agentModal");
@@ -38,6 +38,14 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => console.error('Error:', error));
         });
     }
+
+    // Event delegation for opening modal for expanding images when clicked
+    document.body.addEventListener('click', function(event) {
+        var target = event.target;
+        if (target.classList.contains('unit-card-img')) { // Check if the clicked element is a floor plan image
+            openModal(target.src); // Call openModal with the image src
+        }
+    });
 });
 
 // hamburger menu event listener
@@ -77,6 +85,17 @@ function toggleNav() {
 // Function to calculate the width of the scrollbar
 function scrollbarWidth() {
     return window.innerWidth - document.documentElement.clientWidth;
+}
+
+// expand image modal
+function openModal(imageSrc) {
+    document.getElementById('modalImage').src = imageSrc;
+    jQuery('#floorPlanModal').modal('show'); // Use 'jQuery' instead of '$'
+}
+
+// close expand image modal
+function closeModal() {
+    jQuery('#floorPlanModal').modal('hide'); // Use 'jQuery' instead of '$'
 }
 
 // console.log('condoapp-ajax.js is loaded');

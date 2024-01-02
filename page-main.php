@@ -83,4 +83,18 @@ get_header(); ?>
     </main><!-- #main -->
 </div><!-- #primary -->
 
+<!-- Modal Structure for Floor Plan Image -->
+<div class="modal fade" id="floorPlanModal" tabindex="-1" role="dialog" aria-labelledby="floorPlanModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <button type="button" class="close" aria-label="Close" onclick="closeModal()">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            <div class="modal-body">
+                <img id="modalImage" src="" class="img-fluid" alt="Floor Plan">
+            </div>
+        </div>
+    </div>
+</div>
+
 <?php get_footer(); ?>
